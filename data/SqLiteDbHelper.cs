@@ -11,6 +11,70 @@ namespace prgmlab3.data
 
         public static void SetConnectionString(string conn) => _connectionString = conn;
 
+
+        public static void Initialize()
+    {
+    using var conn = GetConnection();
+    using var cmd = conn.CreateCommand();
+    cmd.CommandText = @"
+    CREATE TABLE IF NOT EXISTS users (
+        id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+        username VARCHAR NOT NULL,
+        password VARCHAR NOT NULL,
+        role SMALLINT NOT NULL,
+        mail VARCHAR
+    );
+
+    CREATE TABLE IF NOT EXISTS planes (
+        id INTEGER PRIMARY KEY NOT NULL,
+        name VARCHAR,
+        seat_count INTEGER
+    );
+
+    CREATE TABLE IF NOT EXISTS airports (
+        id INTEGER PRIMARY KEY NOT NULL,
+        code VARCHAR,
+        city VARCHAR,
+        name VARCHAR,
+        country VARCHAR
+    );
+
+    CREATE TABLE IF NOT EXISTS flights (
+        id INTEGER PRIMARY KEY NOT NULL,
+        plane_id INTEGER NOT NULL,
+        departure_time DATETIME,
+        arrival_time DATETIME,
+        price FLOAT,
+        departure_location INTEGER,
+        arrival_location INTEGER,
+        FOREIGN KEY(plane_id) REFERENCES planes(id),
+        FOREIGN KEY(departure_location) REFERENCES airports(id),
+        FOREIGN KEY(arrival_location) REFERENCES airports(id)
+    );
+
+    CREATE TABLE IF NOT EXISTS seats (
+        id INTEGER PRIMARY KEY NOT NULL,
+        plane_id INTEGER,
+        seat_number VARCHAR,
+        class SMALLINT,
+        FOREIGN KEY(plane_id) REFERENCES planes(id)
+    );
+
+    CREATE TABLE IF NOT EXISTS reservations (
+        id INTEGER PRIMARY KEY NOT NULL,
+        user_id INTEGER,
+        flight_id INTEGER,
+        price FLOAT,
+        seat_id INTEGER,
+        status VARCHAR,
+        FOREIGN KEY(user_id) REFERENCES users(id),
+        FOREIGN KEY(flight_id) REFERENCES flights(id),
+        FOREIGN KEY(seat_id) REFERENCES seats(id)
+    );
+    ";
+    cmd.ExecuteNonQuery();
+    }
+
         public static SqliteConnection GetConnection()
         {
             var conn = new SqliteConnection(_connectionString);
