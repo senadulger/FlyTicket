@@ -1,5 +1,8 @@
+using prgmlab3.data;
+
 var builder = WebApplication.CreateBuilder(args);
 
+SqliteDbHelper.Initialize();
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 

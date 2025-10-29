@@ -1,0 +1,28 @@
+@{
+    ViewData["Title"] = "Seats";
+}
+
+<div class="container mt-4">
+    <h2>Seats</h2>
+    <table class="table table-bordered table-hover mt-3">
+        <thead class="table-dark">
+            <tr>
+                <th>ID</th>
+                <th>Seat Number</th>
+                <th>Class</th>
+                <th>Plane</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var row in Model)
+            {
+                <tr>
+                    <td>@row["id"]</td>
+                    <td>@row["seat_number"]</td>
+                    <td>@(Convert.ToInt32(row["class"]) == 1 ? "Business" : "Economy")</td>
+                    <td>@row["plane_name"]</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

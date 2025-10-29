@@ -1,20 +1,32 @@
-namespace prgmlab3.Models;
-
-using prgmlab3.data;
-
-class RezervationModel
+namespace prgmlab3.Models
 {
-    public RezervationModel(int user_id, int flight_id, float price, int seat_id)
+    public class ReservationModel : BaseModel
     {
-        SqliteDbHelper.ExecuteNonQuery("Insert INTO rezervation (user_id,flight_id,price,seat_id,status) VALUES (@userid,@flight_id,@price,@seat_id,@status)",
-        cmd =>
-        {
-            cmd.Parameters.AddWithValue("@userid", user_id);
-            cmd.Parameters.AddWithValue("@flight_id", flight_id);
-            cmd.Parameters.AddWithValue("@price", price);
-            cmd.Parameters.AddWithValue("@seat_id", seat_id);
-            cmd.Parameters.AddWithValue("@status","OK");
-        });
-    }
+        public int Id { get; set; }
+        public int UserId { get; set; }
+        public int FlightId { get; set; }
+        public float Price { get; set; }
+        public int SeatId { get; set; }
+        public string Status { get; set; } = "Pending";
 
+        public ReservationModel(int userId, int flightId, float price, int seatId)
+        {
+            UserId = userId;
+            FlightId = flightId;
+            Price = price;
+            SeatId = seatId;
+        }
+
+        public void Save()
+        {
+            Execute("INSERT INTO reservations (user_id, flight_id, price, seat_id, status) VALUES (@u, @f, @p, @s, @st)", cmd =>
+            {
+                cmd.Parameters.AddWithValue("@u", UserId);
+                cmd.Parameters.AddWithValue("@f", FlightId);
+                cmd.Parameters.AddWithValue("@p", Price);
+                cmd.Parameters.AddWithValue("@s", SeatId);
+                cmd.Parameters.AddWithValue("@st", Status);
+            });
+        }
+    }
 }

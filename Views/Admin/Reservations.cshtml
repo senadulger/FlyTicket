@@ -1,0 +1,32 @@
+@{
+    ViewData["Title"] = "Reservations";
+}
+
+<div class="container mt-4">
+    <h2>Reservations</h2>
+    <table class="table table-bordered table-hover mt-3">
+        <thead class="table-dark">
+            <tr>
+                <th>ID</th>
+                <th>User</th>
+                <th>Flight</th>
+                <th>Seat</th>
+                <th>Price</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var row in Model)
+            {
+                <tr>
+                    <td>@row["id"]</td>
+                    <td>@row["username"]</td>
+                    <td>@row["flight_id"]</td>
+                    <td>@row["seat_number"]</td>
+                    <td>@row["price"]</td>
+                    <td>@row["status"]</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

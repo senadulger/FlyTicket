@@ -1,0 +1,28 @@
+@{
+    ViewData["Title"] = "Users";
+}
+
+<div class="container mt-4">
+    <h2>Users</h2>
+    <table class="table table-bordered table-hover mt-3">
+        <thead class="table-dark">
+            <tr>
+                <th>ID</th>
+                <th>Username</th>
+                <th>Mail</th>
+                <th>Role</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var row in Model)
+            {
+                <tr>
+                    <td>@row["id"]</td>
+                    <td>@row["username"]</td>
+                    <td>@row["mail"]</td>
+                    <td>@(Convert.ToInt32(row["role"]) == 1 ? "Admin" : "User")</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

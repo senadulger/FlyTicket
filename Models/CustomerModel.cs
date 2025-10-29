@@ -1,26 +1,23 @@
-namespace prgmlab3.Models;
-using prgmlab3.data;
-
-class CustomerModel : UserModel
+namespace prgmlab3.Models
 {
-
-    public CustomerModel(string mail,string pass) {
-        var a = SqliteDbHelper.ExecuteQuery("Select * FROM USERS WHERE mail = @mail AND WHERE password = @pass ",
-        cmd =>
+    public class CustomerModel : UserModel
+    {
+        public CustomerModel(int id, string username, string mail)
         {
-            cmd.Parameters.AddWithValue("@mail", mail);
-            cmd.Parameters.AddWithValue("@pass", pass);
-        });
-        if (a.Count == 0)
-        {
-        // yoksa buraya bişi bulmak lazım nasıl engellicez
+            _id = id;
+            _username = username;
+            _mail = mail;
+            _role = 0;
         }
-        else
+
+        public ReservationModel? CreateReservation(int flightId, int seatId)
         {
-            this._id = (int)a[0]["id"];
-            this._username = (string)a[0]["username"];
-            this._mail = (string)a[0]["mail"];
+            var flight = FlightModel.GetById(flightId);
+            if (flight == null) return null;
+
+            ReservationModel reservation = new ReservationModel(_id, flightId, (float)flight.Price, seatId);
+            reservation.Save();
+            return reservation;
         }
     }
-
 }

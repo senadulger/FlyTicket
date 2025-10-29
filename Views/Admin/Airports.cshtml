@@ -1,0 +1,30 @@
+@{
+    ViewData["Title"] = "Airports";
+}
+
+<div class="container mt-4">
+    <h2>Airports</h2>
+    <table class="table table-bordered table-hover mt-3">
+        <thead class="table-dark">
+            <tr>
+                <th>ID</th>
+                <th>Code</th>
+                <th>City</th>
+                <th>Name</th>
+                <th>Country</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var row in Model)
+            {
+                <tr>
+                    <td>@row["id"]</td>
+                    <td>@row["code"]</td>
+                    <td>@row["city"]</td>
+                    <td>@row["name"]</td>
+                    <td>@row["country"]</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
