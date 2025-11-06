@@ -1,34 +1,33 @@
 @{
     ViewData["Title"] = "Flights";
 }
-
 <div class="container mt-4">
     <h2>Flights</h2>
     <table class="table table-bordered table-hover mt-3">
         <thead class="table-dark">
-            <tr>
-                <th>ID</th>
-                <th>Plane</th>
-                <th>From</th>
-                <th>To</th>
-                <th>Departure</th>
-                <th>Arrival</th>
-                <th>Price</th>
-            </tr>
+        <tr>
+            <th>ID</th>
+            <th>Plane</th>
+            <th>Departure</th>
+            <th>Arrival</th>
+            <th>Dep Time</th>
+            <th>Arr Time</th>
+            <th>Base Price</th>
+        </tr>
         </thead>
         <tbody>
-            @foreach (var row in Model)
-            {
-                <tr>
-                    <td>@row["id"]</td>
-                    <td>@row["plane_name"]</td>
-                    <td>@row["departure_city"]</td>
-                    <td>@row["arrival_city"]</td>
-                    <td>@row["departure_time"]</td>
-                    <td>@row["arrival_time"]</td>
-                    <td>@row["price"]</td>
-                </tr>
-            }
+        @foreach (var row in Model)
+        {
+            <tr>
+                <td>@row["id"]</td>
+                <td>@row["plane_name"]</td>
+                <td>@row["departure_city"]</td>
+                <td>@row["arrival_city"]</td>
+                <td>@(((DateTime)row["departure_time"]).ToString("g"))</td>
+                <td>@(((DateTime)row["arrival_time"]).ToString("g"))</td>
+                <td>@row["price"]</td>
+            </tr>
+        }
         </tbody>
     </table>
 </div>

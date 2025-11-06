@@ -13,10 +13,10 @@ namespace prgmlab3.data
 
 
         public static void Initialize()
-    {
-    using var conn = GetConnection();
-    using var cmd = conn.CreateCommand();
-    cmd.CommandText = @"
+        {
+            using var conn = GetConnection();
+            using var cmd = conn.CreateCommand();
+            cmd.CommandText = @"
     CREATE TABLE IF NOT EXISTS users (
         id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
         username VARCHAR NOT NULL,
@@ -72,8 +72,8 @@ namespace prgmlab3.data
         FOREIGN KEY(seat_id) REFERENCES seats(id)
     );
     ";
-    cmd.ExecuteNonQuery();
-    }
+            cmd.ExecuteNonQuery();
+        }
 
         public static SqliteConnection GetConnection()
         {
@@ -83,6 +83,19 @@ namespace prgmlab3.data
             cmd.CommandText = "PRAGMA foreign_keys = ON;";
             cmd.ExecuteNonQuery();
             return conn;
+        }
+
+        public static int Execute(string sql, Action<SqliteCommand> addParams = null)
+        {
+            using var conn = GetConnection();
+            using var tx = conn.BeginTransaction();
+            using var cmd = conn.CreateCommand();
+            cmd.Transaction = tx;
+            cmd.CommandText = sql;
+            addParams?.Invoke(cmd);
+            var affected = cmd.ExecuteNonQuery();
+            tx.Commit();
+            return affected;
         }
 
         // Execute non-query (INSERT/UPDATE/DELETE)

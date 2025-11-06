@@ -4,6 +4,21 @@
 
 <div class="container mt-4">
     <h2>Reservations</h2>
+
+    @* TempData mesajları *@
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success mt-3">@TempData["Success"]</div>
+    }
+    @if (TempData["Info"] != null)
+    {
+        <div class="alert alert-info mt-3">@TempData["Info"]</div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger mt-3">@TempData["Error"]</div>
+    }
+
     <table class="table table-bordered table-hover mt-3">
         <thead class="table-dark">
             <tr>
@@ -13,18 +28,37 @@
                 <th>Seat</th>
                 <th>Price</th>
                 <th>Status</th>
+                <th style="width:120px;">Actions</th>
             </tr>
         </thead>
         <tbody>
             @foreach (var row in Model)
             {
+                var status = (row["status"] as string) ?? "Pending";
                 <tr>
                     <td>@row["id"]</td>
                     <td>@row["username"]</td>
                     <td>@row["flight_id"]</td>
                     <td>@row["seat_number"]</td>
                     <td>@row["price"]</td>
-                    <td>@row["status"]</td>
+                    <td>@status</td>
+                    <td>
+                        @if (!string.Equals(status, "Cancelled", StringComparison.OrdinalIgnoreCase))
+                        {
+                            <form action="@Url.Action("CancelReservation","Admin")" method="post" style="display:inline">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="id" value="@(row["id"])" />
+                                <button type="submit" class="btn btn-sm btn-danger"
+                                    onclick="return confirm('Bu rezervasyonu iptal etmek istiyor musunuz?');">
+                                    İptal
+                                </button>
+                            </form>
+                        }
+                        else
+                        {
+                            <span class="text-muted">İptal</span>
+                        }
+                    </td>
                 </tr>
             }
         </tbody>

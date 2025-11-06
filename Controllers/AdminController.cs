@@ -70,5 +70,36 @@ namespace prgmlab3.Controllers
             ", null);
             return View(reservations);
         }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult CancelReservation(int id)
+        {
+            try
+            {
+                const string sql = @"
+                    UPDATE reservations
+                    SET status = @st
+                    WHERE id = @id AND (status IS NULL OR status <> @st);
+                ";
+
+                var affected = SqliteDbHelper.Execute(sql, cmd =>
+                {
+                    cmd.Parameters.AddWithValue("@id", id);
+                    cmd.Parameters.AddWithValue("@st", "Cancelled");
+                });
+
+                if (affected > 0)
+                    TempData["Success"] = "Rezervasyon iptal edildi.";
+                else
+                    TempData["Info"] = "Kayıt bulunamadı veya zaten iptal.";
+            }
+            catch (System.Exception ex)
+            {
+                TempData["Error"] = "İptal sırasında hata: " + ex.Message;
+            }
+
+            return RedirectToAction(nameof(Reservations));
+        }
     }
 }
