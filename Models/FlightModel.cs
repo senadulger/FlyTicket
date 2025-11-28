@@ -60,32 +60,37 @@ namespace prgmlab3.Models
         {
             if (Id == 0)
             {
-                SqliteDbHelper.Execute(
-                    "INSERT INTO flights (plane_id, departure_location, arrival_location, departure_time, arrival_time, price) VALUES (@p,@dl,@al,@d,@a,@pr)",
-                    cmd =>
-                    {
-                        cmd.Parameters.AddWithValue("@p", PlaneId);
-                        cmd.Parameters.AddWithValue("@dl", DepartureLocation);
-                        cmd.Parameters.AddWithValue("@al", ArrivalLocation);
-                        cmd.Parameters.AddWithValue("@d", DepartureTime.ToString("s"));
-                        cmd.Parameters.AddWithValue("@a", ArrivalTime.ToString("s"));
-                        cmd.Parameters.AddWithValue("@pr", Price);
-                    });
+                SqliteDbHelper.ExecuteNonQuery("INSERT INTO flights (plane_id, departure_location, arrival_location, departure_time, arrival_time, price) VALUES (@p, @d, @a, @dt, @at, @pr)", cmd =>
+                {
+                    cmd.Parameters.AddWithValue("@p", PlaneId);
+                    cmd.Parameters.AddWithValue("@d", DepartureLocation);
+                    cmd.Parameters.AddWithValue("@a", ArrivalLocation);
+                    cmd.Parameters.AddWithValue("@dt", DepartureTime.ToString("s"));
+                    cmd.Parameters.AddWithValue("@at", ArrivalTime.ToString("s"));
+                    cmd.Parameters.AddWithValue("@pr", Price);
+                });
             }
             else
             {
-                SqliteDbHelper.Execute(
-                    "UPDATE flights SET plane_id=@p, departure_location=@dl, arrival_location=@al, departure_time=@d, arrival_time=@a, price=@pr WHERE id=@id",
-                    cmd =>
-                    {
-                        cmd.Parameters.AddWithValue("@id", Id);
-                        cmd.Parameters.AddWithValue("@p", PlaneId);
-                        cmd.Parameters.AddWithValue("@dl", DepartureLocation);
-                        cmd.Parameters.AddWithValue("@al", ArrivalLocation);
-                        cmd.Parameters.AddWithValue("@d", DepartureTime.ToString("s"));
-                        cmd.Parameters.AddWithValue("@a", ArrivalTime.ToString("s"));
-                        cmd.Parameters.AddWithValue("@pr", Price);
-                    });
+                // Update logic if needed
+            }
+        }
+
+        public double CalculatePrice()
+        {
+            var timeToDeparture = DepartureTime - DateTime.Now;
+            var days = timeToDeparture.TotalDays;
+
+            if (days < 0) return Price;
+
+            if (days >= 30)
+            {
+                return Price * 0.60;
+            }
+            else
+            {
+                double factor = 1.0 - (days / 30.0) * 0.4;
+                return Price * factor;
             }
         }
 

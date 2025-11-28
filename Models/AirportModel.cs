@@ -16,7 +16,7 @@ namespace prgmlab3.Models
             var r = res[0];
             return new AirportModel
             {
-                Id = (int)r["id"],
+                Id = Convert.ToInt32(r["id"]),
                 Code = (string)r["code"],
                 City = (string)r["city"],
                 Name = (string)r["name"],

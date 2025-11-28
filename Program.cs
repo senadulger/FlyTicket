@@ -5,6 +5,14 @@ var builder = WebApplication.CreateBuilder(args);
 SqliteDbHelper.Initialize();
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+builder.Services.AddAuthentication("CookieAuth")
+    .AddCookie("CookieAuth", options =>
+    {
+        options.LoginPath = "/Account/Login";
+        options.AccessDeniedPath = "/Account/AccessDenied";
+    });
+
+builder.Services.AddAuthorization();
 
 var app = builder.Build();
 
@@ -20,6 +28,7 @@ if (!app.Environment.IsDevelopment())
 //app.UseHttpsRedirection();
 app.UseRouting();
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.UseStaticFiles();

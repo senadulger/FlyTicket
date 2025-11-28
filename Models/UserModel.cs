@@ -29,9 +29,24 @@ namespace prgmlab3.Models
             int role = Convert.ToInt32(row["role"]);
 
             if (role == 1)
-                return new AdminModel((int)row["id"], (string)row["username"], (string)row["mail"]);
+                return new AdminModel(Convert.ToInt32(row["id"]), (string)row["username"], (string)row["mail"]);
             else
-                return new CustomerModel((int)row["id"], (string)row["username"], (string)row["mail"]);
+                return new CustomerModel(Convert.ToInt32(row["id"]), (string)row["username"], (string)row["mail"]);
+        }
+
+        public static bool Register(string username, string mail, string password)
+        {
+            // Check if mail already exists
+            var existing = Query("SELECT id FROM users WHERE mail=@mail", cmd => cmd.Parameters.AddWithValue("@mail", mail));
+            if (existing.Count > 0) return false;
+
+            Execute("INSERT INTO users (username, mail, password, role) VALUES (@u, @m, @p, 0)", cmd =>
+            {
+                cmd.Parameters.AddWithValue("@u", username);
+                cmd.Parameters.AddWithValue("@m", mail);
+                cmd.Parameters.AddWithValue("@p", password);
+            });
+            return true;
         }
     }
 }

@@ -1,0 +1,65 @@
+@model List<prgmlab3.Models.SeatModel>
+@{
+    ViewData["Title"] = "Koltuk Seçimi";
+    var flight = ViewBag.Flight as prgmlab3.Models.FlightModel;
+    var planeName = ViewBag.PlaneName as string;
+    var reservedIds = ViewBag.ReservedSeatIds as List<int> ?? new List<int>();
+    var airportMap = ViewBag.AirportMap as Dictionary<int, string>;
+}
+
+<div class="container mt-4">
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-body">
+                    <h4 class="card-title">Uçuş Bilgileri</h4>
+                    <p class="card-text">
+                        <strong>Uçak:</strong> @planeName <br />
+                        <strong>Kalkış:</strong> @airportMap?[flight.DepartureLocation] - @flight.DepartureTime.ToString("g") <br />
+                        <strong>Varış:</strong> @airportMap?[flight.ArrivalLocation] - @flight.ArrivalTime.ToString("g") <br />
+                        <strong>Fiyat:</strong> @flight.Price ₺
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <h3 class="mb-3">Koltuk Seçimi</h3>
+    
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger">@TempData["Error"]</div>
+    }
+
+    <div class="row">
+        @foreach (var seat in Model.OrderBy(s => s.SeatNumber))
+        {
+            var isReserved = reservedIds.Contains(seat.Id);
+            var btnClass = isReserved ? "btn-secondary disabled" : "btn-outline-primary";
+            var btnText = isReserved ? "Dolu" : "Seç";
+            var seatClass = seat.Class == 1 ? "Business" : "Economy";
+
+            <div class="col-md-2 col-sm-3 col-4 mb-3">
+                <div class="card text-center @(isReserved ? "bg-light" : "")">
+                    <div class="card-body p-2">
+                        <h5 class="card-title">@seat.SeatNumber</h5>
+                        <p class="card-text small text-muted">@seatClass</p>
+                        @if (isReserved)
+                        {
+                            <button class="btn btn-sm btn-secondary" disabled>Dolu</button>
+                        }
+                        else
+                        {
+                            <form asp-action="BookSeat" method="post">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="flightId" value="@flight.Id" />
+                                <input type="hidden" name="seatId" value="@seat.Id" />
+                                <button type="submit" class="btn btn-sm btn-success w-100" onclick="return confirm('@seat.SeatNumber numaralı koltuğu rezerve etmek istiyor musunuz?');">Seç</button>
+                            </form>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>
