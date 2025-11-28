@@ -1,8 +1,20 @@
+@model List<Dictionary<string, object>>
 @{
     ViewData["Title"] = "Flights";
 }
 <div class="container mt-4">
     <h2>Flights</h2>
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success mt-3">@TempData["Success"]</div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger mt-3">@TempData["Error"]</div>
+    }
+    <div class="mb-3">
+        <a class="btn btn-primary" asp-controller="Admin" asp-action="AddFlight">Add Flight</a>
+    </div>
     <table class="table table-bordered table-hover mt-3">
         <thead class="table-dark">
         <tr>
@@ -13,6 +25,7 @@
             <th>Dep Time</th>
             <th>Arr Time</th>
             <th>Base Price</th>
+            <th>Actions</th>
         </tr>
         </thead>
         <tbody>
@@ -23,9 +36,43 @@
                 <td>@row["plane_name"]</td>
                 <td>@row["departure_city"]</td>
                 <td>@row["arrival_city"]</td>
-                <td>@(((DateTime)row["departure_time"]).ToString("g"))</td>
-                <td>@(((DateTime)row["arrival_time"]).ToString("g"))</td>
+                <td>
+                    @{
+                        var dep = row["departure_time"];
+                        string depStr = "";
+                        if (dep != null)
+                        {
+                            if (dep is DateTime dt) depStr = dt.ToString("g");
+                            else if (DateTime.TryParse(Convert.ToString(dep), out var dtmp)) depStr = dtmp.ToString("g");
+                            else depStr = Convert.ToString(dep);
+                        }
+                    }
+                    @depStr
+                </td>
+                <td>
+                    @{
+                        var arr = row["arrival_time"];
+                        string arrStr = "";
+                        if (arr != null)
+                        {
+                            if (arr is DateTime dt2) arrStr = dt2.ToString("g");
+                            else if (DateTime.TryParse(Convert.ToString(arr), out var atmp)) arrStr = atmp.ToString("g");
+                            else arrStr = Convert.ToString(arr);
+                        }
+                    }
+                    @arrStr
+                </td>
                 <td>@row["price"]</td>
+                <td>
+                    <form action="@Url.Action("DeleteFlight","Admin")" method="post" style="display:inline">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="id" value="@(row["id"])" />
+                        <button type="submit" class="btn btn-sm btn-danger"
+                            onclick="return confirm('Bu uçuşu silmek istiyor musunuz?');">
+                            Sil
+                        </button>
+                    </form>
+                </td>
             </tr>
         }
         </tbody>

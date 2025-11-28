@@ -1,9 +1,21 @@
+@model List<Dictionary<string, object>>
 @{
     ViewData["Title"] = "Planes";
 }
 
 <div class="container mt-4">
     <h2>Planes</h2>
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success mt-3">@TempData["Success"]</div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger mt-3">@TempData["Error"]</div>
+    }
+    <div class="mb-3">
+        <a class="btn btn-primary" asp-controller="Admin" asp-action="AddPlane">Add Plane</a>
+    </div>
     <table class="table table-bordered table-hover mt-3">
         <thead class="table-dark">
             <tr>
@@ -19,6 +31,14 @@
                     <td>@row["id"]</td>
                     <td>@row["name"]</td>
                     <td>@row["seat_count"]</td>
+                    <td>
+                        <a class="btn btn-sm btn-secondary" asp-controller="Admin" asp-action="Seats" asp-route-planeId="@(row["id"])">View Seats</a>
+                        <form action="@Url.Action("DeletePlane","Admin")" method="post" style="display:inline; margin-left:6px;">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="id" value="@(row["id"])" />
+                            <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Bu uçağı silmek istiyor musunuz?');">Sil</button>
+                        </form>
+                    </td>
                 </tr>
             }
         </tbody>

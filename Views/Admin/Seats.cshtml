@@ -1,9 +1,31 @@
+@model List<Dictionary<string, object>>
 @{
     ViewData["Title"] = "Seats";
 }
 
 <div class="container mt-4">
-    <h2>Seats</h2>
+    <h2>Seats @if (ViewBag.FilterPlaneName != null) { <text>- @ViewBag.FilterPlaneName</text> }</h2>
+    @if (ViewBag.FilterPlaneId != null)
+    {
+        <div class="mb-3">
+            <form asp-controller="Admin" asp-action="AddSeat" method="post" class="row g-2">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="planeId" value="@(ViewBag.FilterPlaneId)" />
+                <div class="col-md-3">
+                    <input type="text" class="form-control" name="seatNumber" placeholder="Seat Number (e.g. 1A)" required />
+                </div>
+                <div class="col-md-2">
+                    <select class="form-select" name="seatClass">
+                        <option value="0">Economy</option>
+                        <option value="1">Business</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary">Add Seat</button>
+                </div>
+            </form>
+        </div>
+    }
     <table class="table table-bordered table-hover mt-3">
         <thead class="table-dark">
             <tr>
@@ -21,6 +43,14 @@
                     <td>@row["seat_number"]</td>
                     <td>@(Convert.ToInt32(row["class"]) == 1 ? "Business" : "Economy")</td>
                     <td>@row["plane_name"]</td>
+                    <td>
+                        <form action="@Url.Action("DeleteSeat","Admin")" method="post" style="display:inline">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="id" value="@(row["id"])" />
+                            <input type="hidden" name="planeId" value="@(ViewBag.FilterPlaneId ?? Convert.ToInt32(row["plane_id"]))" />
+                            <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Bu koltuğu silmek istiyor musunuz?');">Sil</button>
+                        </form>
+                    </td>
                 </tr>
             }
         </tbody>

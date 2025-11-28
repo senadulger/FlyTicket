@@ -1,6 +1,8 @@
 using prgmlab3.data;
 using System.Collections.Generic;
 using System;
+using System.Runtime.Serialization;
+using System.Runtime.CompilerServices;
 
 namespace prgmlab3.Models
 {
@@ -8,8 +10,8 @@ namespace prgmlab3.Models
     {
         public int Id { get; set; }
         public int PlaneId { get; set; }
-        public string From { get; set; } = "";
-        public string To { get; set; } = "";
+        public int DepartureLocation { get; set; }
+        public int ArrivalLocation { get; set; }
         public DateTime DepartureTime { get; set; }
         public DateTime ArrivalTime { get; set; }
         public double Price { get; set; }
@@ -17,18 +19,18 @@ namespace prgmlab3.Models
         public static List<FlightModel> GetAll()
         {
             var flights = new List<FlightModel>();
-            var rows = SqliteDbHelper.ExecuteQuery("SELECT * FROM Flights");
+            var rows = SqliteDbHelper.ExecuteQuery("SELECT * FROM flights");
             foreach (var r in rows)
             {
                 flights.Add(new FlightModel
                 {
-                    Id = (int)r["Id"],
-                    PlaneId = (int)r["PlaneId"],
-                    From = (string)r["From"],
-                    To = (string)r["To"],
-                    DepartureTime = DateTime.Parse((string)r["DepartureTime"]),
-                    ArrivalTime = DateTime.Parse((string)r["ArrivalTime"]),
-                    Price = Convert.ToDouble(r["Price"])
+                    Id = Convert.ToInt32(r["id"]),
+                    PlaneId = Convert.ToInt32(r["plane_id"]),
+                    DepartureLocation = Convert.ToInt32(r["departure_location"]),
+                    ArrivalLocation = Convert.ToInt32(r["arrival_location"]),
+                    DepartureTime = DateTime.TryParse(Convert.ToString(r["departure_time"]), out var dttmp) ? dttmp : DateTime.MinValue,
+                    ArrivalTime = DateTime.TryParse(Convert.ToString(r["arrival_time"]), out var attmp) ? attmp : DateTime.MinValue,
+                    Price = Convert.ToDouble(r["price"])
                 });
             }
             return flights;
@@ -36,7 +38,7 @@ namespace prgmlab3.Models
 
         public static FlightModel? GetById(int id)
         {
-            var rows = SqliteDbHelper.ExecuteQuery("SELECT * FROM Flights WHERE Id=@id", cmd =>
+            var rows = SqliteDbHelper.ExecuteQuery("SELECT * FROM flights WHERE id=@id", cmd =>
             {
                 cmd.Parameters.AddWithValue("@id", id);
             });
@@ -44,13 +46,13 @@ namespace prgmlab3.Models
             var r = rows[0];
             return new FlightModel
             {
-                Id = (int)r["Id"],
-                PlaneId = (int)r["PlaneId"],
-                From = (string)r["From"],
-                To = (string)r["To"],
-                DepartureTime = DateTime.Parse((string)r["DepartureTime"]),
-                ArrivalTime = DateTime.Parse((string)r["ArrivalTime"]),
-                Price = Convert.ToDouble(r["Price"])
+                Id = Convert.ToInt32(r["id"]),
+                PlaneId = Convert.ToInt32(r["plane_id"]),
+                DepartureLocation = Convert.ToInt32(r["departure_location"]),
+                ArrivalLocation = Convert.ToInt32(r["arrival_location"]),
+                DepartureTime = DateTime.TryParse(Convert.ToString(r["departure_time"]), out var dttmp2) ? dttmp2 : DateTime.MinValue,
+                ArrivalTime = DateTime.TryParse(Convert.ToString(r["arrival_time"]), out var attmp2) ? attmp2 : DateTime.MinValue,
+                Price = Convert.ToDouble(r["price"])
             };
         }
 
@@ -58,13 +60,13 @@ namespace prgmlab3.Models
         {
             if (Id == 0)
             {
-                SqliteDbHelper.ExecuteNonQuery(
-                    "INSERT INTO Flights (PlaneId, From, To, DepartureTime, ArrivalTime, Price) VALUES (@p,@f,@t,@d,@a,@pr)",
+                SqliteDbHelper.Execute(
+                    "INSERT INTO flights (plane_id, departure_location, arrival_location, departure_time, arrival_time, price) VALUES (@p,@dl,@al,@d,@a,@pr)",
                     cmd =>
                     {
                         cmd.Parameters.AddWithValue("@p", PlaneId);
-                        cmd.Parameters.AddWithValue("@f", From);
-                        cmd.Parameters.AddWithValue("@t", To);
+                        cmd.Parameters.AddWithValue("@dl", DepartureLocation);
+                        cmd.Parameters.AddWithValue("@al", ArrivalLocation);
                         cmd.Parameters.AddWithValue("@d", DepartureTime.ToString("s"));
                         cmd.Parameters.AddWithValue("@a", ArrivalTime.ToString("s"));
                         cmd.Parameters.AddWithValue("@pr", Price);
@@ -72,14 +74,14 @@ namespace prgmlab3.Models
             }
             else
             {
-                SqliteDbHelper.ExecuteNonQuery(
-                    "UPDATE Flights SET PlaneId=@p, From=@f, To=@t, DepartureTime=@d, ArrivalTime=@a, Price=@pr WHERE Id=@id",
+                SqliteDbHelper.Execute(
+                    "UPDATE flights SET plane_id=@p, departure_location=@dl, arrival_location=@al, departure_time=@d, arrival_time=@a, price=@pr WHERE id=@id",
                     cmd =>
                     {
                         cmd.Parameters.AddWithValue("@id", Id);
                         cmd.Parameters.AddWithValue("@p", PlaneId);
-                        cmd.Parameters.AddWithValue("@f", From);
-                        cmd.Parameters.AddWithValue("@t", To);
+                        cmd.Parameters.AddWithValue("@dl", DepartureLocation);
+                        cmd.Parameters.AddWithValue("@al", ArrivalLocation);
                         cmd.Parameters.AddWithValue("@d", DepartureTime.ToString("s"));
                         cmd.Parameters.AddWithValue("@a", ArrivalTime.ToString("s"));
                         cmd.Parameters.AddWithValue("@pr", Price);
@@ -87,9 +89,31 @@ namespace prgmlab3.Models
             }
         }
 
+        public static List<Dictionary<string, object>> SearchFlights(string departuateLocation,string ArrivalLocation)
+        {
+            return Query(@"SELECT 
+        f.id,
+        a1.name AS departure_name,
+        a2.name AS arrival_name,
+        f.plane_id,
+        f.departure_time,
+        f.arrival_time
+        FROM flights f
+        JOIN airports a1 ON f.departure_location = a1.id
+        JOIN airports a2 ON f.arrival_location = a2.id
+        WHERE a1.name = @departure_name
+        AND a2.name = @arrival_name;",
+            cmd =>
+            {
+                cmd.Parameters.AddWithValue("@departure_name", departuateLocation);
+                cmd.Parameters.AddWithValue("@arrival_name", ArrivalLocation);
+            });
+        }
+        
+
         public static void Delete(int id)
         {
-            SqliteDbHelper.ExecuteNonQuery("DELETE FROM Flights WHERE Id=@id", cmd =>
+            SqliteDbHelper.ExecuteNonQuery("DELETE FROM flights WHERE id=@id", cmd =>
             {
                 cmd.Parameters.AddWithValue("@id", id);
             });
