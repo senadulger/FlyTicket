@@ -65,7 +65,7 @@ namespace prgmlab3.Models
                 throw new InvalidOperationException("Cancel() için geçerli bir Id gerekli.");
 
             CancelById(Id);
-            Status = StatusCancelled; // local durumunu da güncelle
+            Status = StatusCancelled; 
         }
 
         public static List<int> GetReservedSeatIds(int flightId)

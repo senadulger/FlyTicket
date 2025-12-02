@@ -1,38 +1,48 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using prgmlab3.Models;
-using System.Security.Claims;
 
 namespace prgmlab3.Controllers
 {
-    [Authorize]
     public class BookingController : Controller
     {
+
+        //  UÇUŞ ARAMA / LİSTELEME
+        [HttpGet]
+        [AllowAnonymous]
         public IActionResult Index(string? from, string? to, DateTime? startDate, DateTime? endDate)
         {
-            List<FlightModel> flights;
-            var all = FlightModel.GetAll();
-            
-            // Filter out past flights first
-            all = all.Where(f => f.DepartureTime > DateTime.Now).ToList();
+            var now = DateTime.Now;
 
-            // Fetch airports map
+            var all = FlightModel.GetAll()
+                                 .Where(f => f.DepartureTime > now)
+                                 .ToList();
+
             var airports = AirportModel.Query("SELECT * FROM airports", null);
             var airportMap = new Dictionary<int, AirportModel>();
-            foreach(var a in airports)
+            foreach (var a in airports)
             {
                 var am = new AirportModel
                 {
                     Id = Convert.ToInt32(a["id"]),
-                    City = (string)a["city"],
-                    Name = (string)a["name"]
+                    City = Convert.ToString(a["city"]) ?? "",
+                    Name = Convert.ToString(a["name"]) ?? ""
                 };
                 airportMap[am.Id] = am;
             }
 
-            if (!string.IsNullOrEmpty(from) || !string.IsNullOrEmpty(to) || startDate.HasValue || endDate.HasValue)
+            List<FlightModel> flights;
+
+            if (!string.IsNullOrEmpty(from) ||
+                !string.IsNullOrEmpty(to) ||
+                startDate.HasValue ||
+                endDate.HasValue)
             {
-                flights = all.Where(f => 
+                flights = all.Where(f =>
                 {
                     bool matchFrom = true;
                     bool matchTo = true;
@@ -40,26 +50,38 @@ namespace prgmlab3.Controllers
 
                     if (!string.IsNullOrEmpty(from))
                     {
-                        if (!airportMap.ContainsKey(f.DepartureLocation)) matchFrom = false;
+                        if (!airportMap.ContainsKey(f.DepartureLocation))
+                        {
+                            matchFrom = false;
+                        }
                         else
                         {
                             var dep = airportMap[f.DepartureLocation];
-                            matchFrom = dep.City.Contains(from, StringComparison.CurrentCultureIgnoreCase) || dep.Name.Contains(from, StringComparison.CurrentCultureIgnoreCase);
+                            matchFrom =
+                                dep.City.Contains(from, StringComparison.CurrentCultureIgnoreCase) ||
+                                dep.Name.Contains(from, StringComparison.CurrentCultureIgnoreCase);
                         }
                     }
 
                     if (!string.IsNullOrEmpty(to))
                     {
-                        if (!airportMap.ContainsKey(f.ArrivalLocation)) matchTo = false;
+                        if (!airportMap.ContainsKey(f.ArrivalLocation))
+                        {
+                            matchTo = false;
+                        }
                         else
                         {
                             var arr = airportMap[f.ArrivalLocation];
-                            matchTo = arr.City.Contains(to, StringComparison.CurrentCultureIgnoreCase) || arr.Name.Contains(to, StringComparison.CurrentCultureIgnoreCase);
+                            matchTo =
+                                arr.City.Contains(to, StringComparison.CurrentCultureIgnoreCase) ||
+                                arr.Name.Contains(to, StringComparison.CurrentCultureIgnoreCase);
                         }
                     }
 
-                    if (startDate.HasValue && f.DepartureTime.Date < startDate.Value.Date) matchDate = false;
-                    if (endDate.HasValue && f.DepartureTime.Date > endDate.Value.Date) matchDate = false;
+                    if (startDate.HasValue && f.DepartureTime.Date < startDate.Value.Date)
+                        matchDate = false;
+                    if (endDate.HasValue && f.DepartureTime.Date > endDate.Value.Date)
+                        matchDate = false;
 
                     return matchFrom && matchTo && matchDate;
                 }).ToList();
@@ -69,15 +91,23 @@ namespace prgmlab3.Controllers
                 flights = all;
             }
 
-            // Update prices dynamically
+            // Dinamik fiyat 
             foreach (var f in flights)
             {
-                f.Price = f.CalculatePrice();
+                var reservedSeatIds = ReservationModel.GetReservedSeatIds(f.Id);
+                var allSeats = SeatModel.GetByPlane(f.PlaneId);
+                int totalSeats = allSeats.Count == 0 ? 1 : allSeats.Count;  
+                double occupancy = (double)reservedSeatIds.Count / totalSeats;
+
+                f.Price = f.CalculateDynamicPrice(
+                    seatClass: 0,
+                    occupancyRatio: occupancy,
+                    nowOverride: now
+                );
             }
 
-            // Populate ViewBag with Airport names for display
             var airportNameMap = new Dictionary<int, string>();
-            foreach(var kvp in airportMap)
+            foreach (var kvp in airportMap)
             {
                 airportNameMap[kvp.Key] = $"{kvp.Value.City} ({kvp.Value.Name})";
             }
@@ -86,27 +116,42 @@ namespace prgmlab3.Controllers
             return View(flights);
         }
 
+        //  KOLTUK SEÇİMİ
+        [HttpGet]
+        [Authorize]
         public IActionResult SelectSeat(int flightId)
         {
             var flight = FlightModel.GetById(flightId);
-            if (flight == null) return NotFound();
+            if (flight == null)
+                return NotFound();
 
-            // Check if flight is in the past
-            if (flight.DepartureTime <= DateTime.Now)
+            var now = DateTime.Now;
+
+            if (flight.DepartureTime <= now)
             {
                 TempData["Error"] = "Geçmiş uçuşlar için işlem yapılamaz.";
                 return RedirectToAction(nameof(Index));
             }
 
-            // Update price dynamically
-            flight.Price = flight.CalculatePrice();
-
-            var plane = PlaneModel.Query("SELECT * FROM planes WHERE id=@id", c => c.Parameters.AddWithValue("@id", flight.PlaneId));
-            if (plane.Count == 0) return NotFound();
-            
-            var planeName = (string)plane[0]["name"];
             var seats = SeatModel.GetByPlane(flight.PlaneId);
             var reservedSeatIds = ReservationModel.GetReservedSeatIds(flightId);
+
+            int totalSeats = seats.Count == 0 ? 1 : seats.Count;
+            double occupancy = (double)reservedSeatIds.Count / totalSeats;
+            flight.Price = flight.CalculateDynamicPrice(
+                seatClass: 0,
+                occupancyRatio: occupancy,
+                nowOverride: now
+            );
+
+            var planeRows = PlaneModel.Query(
+                "SELECT * FROM planes WHERE id=@id",
+                c => c.Parameters.AddWithValue("@id", flight.PlaneId)
+            );
+            if (planeRows.Count == 0)
+                return NotFound();
+
+            var planeName = Convert.ToString(planeRows[0]["name"]) ?? "?";
 
             ViewBag.Flight = flight;
             ViewBag.PlaneName = planeName;
@@ -114,34 +159,40 @@ namespace prgmlab3.Controllers
 
             var allAirports = AirportModel.Query("SELECT * FROM airports", null);
             var airportNameMap = new Dictionary<int, string>();
-            foreach(var a in allAirports)
+            foreach (var a in allAirports)
             {
-                airportNameMap[Convert.ToInt32(a["id"])] = $"{a["city"]} ({a["name"]})";
+                var id = Convert.ToInt32(a["id"]);
+                var city = Convert.ToString(a["city"]) ?? "";
+                var name = Convert.ToString(a["name"]) ?? "";
+                airportNameMap[id] = $"{city} ({name})";
             }
             ViewBag.AirportMap = airportNameMap;
 
             return View(seats);
         }
 
+        //  REZERVASYON OLUŞTUR
         [HttpPost]
+        [Authorize]
         [ValidateAntiForgeryToken]
         public IActionResult BookSeat(int flightId, int seatId)
         {
             var userIdStr = User.FindFirst("UserId")?.Value;
-            if (string.IsNullOrEmpty(userIdStr)) return Unauthorized();
-            int userId = int.Parse(userIdStr);
+            if (!int.TryParse(userIdStr, out var userId))
+                return Unauthorized();
 
             var flight = FlightModel.GetById(flightId);
-            if (flight == null) return NotFound();
+            if (flight == null)
+                return NotFound();
 
-            // Check if flight is in the past
-            if (flight.DepartureTime <= DateTime.Now)
+            var now = DateTime.Now;
+
+            if (flight.DepartureTime <= now)
             {
                 TempData["Error"] = "Geçmiş uçuşlar rezerve edilemez.";
                 return RedirectToAction(nameof(Index));
             }
 
-            // Check if seat is already reserved
             var reserved = ReservationModel.GetReservedSeatIds(flightId);
             if (reserved.Contains(seatId))
             {
@@ -149,10 +200,27 @@ namespace prgmlab3.Controllers
                 return RedirectToAction(nameof(SelectSeat), new { flightId });
             }
 
-            // Use dynamic price
-            double currentPrice = flight.CalculatePrice();
+            var seatRows = SeatModel.Query(
+                "SELECT * FROM seats WHERE id=@id",
+                c => c.Parameters.AddWithValue("@id", seatId)
+            );
+            if (seatRows.Count == 0)
+            {
+                TempData["Error"] = "Koltuk bulunamadı.";
+                return RedirectToAction(nameof(SelectSeat), new { flightId });
+            }
+            int seatClass = Convert.ToInt32(seatRows[0]["class"]);
 
-            // Create reservation
+            var allSeats = SeatModel.GetByPlane(flight.PlaneId);
+            int totalSeats = allSeats.Count == 0 ? 1 : allSeats.Count;
+            double occupancyRatio = (double)reserved.Count / totalSeats;
+
+            double currentPrice = flight.CalculateDynamicPrice(
+                seatClass: seatClass,
+                occupancyRatio: occupancyRatio,
+                nowOverride: now
+            );
+
             var res = new ReservationModel(userId, flightId, (float)currentPrice, seatId);
             res.Save();
 
@@ -160,23 +228,34 @@ namespace prgmlab3.Controllers
             return RedirectToAction(nameof(MyReservations));
         }
 
+        //  KULLANICININ REZERVASYONLARI
+        [HttpGet]
+        [Authorize]
         public IActionResult MyReservations()
         {
             var userIdStr = User.FindFirst("UserId")?.Value;
-            if (string.IsNullOrEmpty(userIdStr)) return Unauthorized();
-            int userId = int.Parse(userIdStr);
+            if (!int.TryParse(userIdStr, out var userId))
+                return Unauthorized();
 
+            var now = DateTime.Now;
             var reservations = ReservationModel.GetByUserId(userId);
-            
-            // Enrich data for view
+
             var viewModels = new List<Dictionary<string, object>>();
+
             foreach (var r in reservations)
             {
                 var flight = FlightModel.GetById(r.FlightId);
-                var seat = SeatModel.Query("SELECT seat_number FROM seats WHERE id=@id", c => c.Parameters.AddWithValue("@id", r.SeatId));
-                string seatNum = seat.Count > 0 ? (string)seat[0]["seat_number"] : "?";
-                
-                string depCity = "?", arrCity = "?";
+
+                var seatRows = SeatModel.Query(
+                    "SELECT seat_number FROM seats WHERE id=@id",
+                    c => c.Parameters.AddWithValue("@id", r.SeatId)
+                );
+                string seatNum = seatRows.Count > 0
+                    ? Convert.ToString(seatRows[0]["seat_number"]) ?? "?"
+                    : "?";
+
+                string depCity = "?";
+                string arrCity = "?";
                 bool canCancel = false;
                 bool canCheckIn = false;
 
@@ -186,16 +265,14 @@ namespace prgmlab3.Controllers
                     var arr = AirportModel.GetById(flight.ArrivalLocation);
                     depCity = dep?.City ?? "?";
                     arrCity = arr?.City ?? "?";
-                    
-                    // Can only cancel if flight is in the future
-                    if (flight.DepartureTime > DateTime.Now)
-                    {
-                        canCancel = true;
-                    }
 
-                    // Check-in logic: e.g., within 24 hours of departure
-                    // For simplicity, let's say check-in is allowed if flight is in future and not cancelled
-                    if (flight.DepartureTime > DateTime.Now && !string.Equals(r.Status, "Cancelled", StringComparison.OrdinalIgnoreCase))
+                    if (flight.DepartureTime > now)
+                        canCancel = true;
+
+                    var status = r.Status ?? "Pending";
+                    if (flight.DepartureTime > now &&
+                        !string.Equals(status, "Cancelled", StringComparison.OrdinalIgnoreCase) &&
+                        !string.Equals(status, "CANCELLED", StringComparison.OrdinalIgnoreCase))
                     {
                         canCheckIn = true;
                     }
@@ -208,7 +285,7 @@ namespace prgmlab3.Controllers
                     { "date", flight?.DepartureTime.ToString("g") ?? "?" },
                     { "seat", seatNum },
                     { "price", r.Price },
-                    { "status", r.Status },
+                    { "status", r.Status ?? "Pending" },
                     { "can_cancel", canCancel },
                     { "can_checkin", canCheckIn }
                 });
@@ -217,33 +294,40 @@ namespace prgmlab3.Controllers
             return View(viewModels);
         }
 
+        //  CHECK-IN
         [HttpPost]
+        [Authorize]
         [ValidateAntiForgeryToken]
         public IActionResult CheckIn(int id)
         {
             var userIdStr = User.FindFirst("UserId")?.Value;
-            if (string.IsNullOrEmpty(userIdStr)) return Unauthorized();
-            int userId = int.Parse(userIdStr);
+            if (!int.TryParse(userIdStr, out var userId))
+                return Unauthorized();
 
-            // Verify ownership
-            var res = ReservationModel.Query("SELECT * FROM reservations WHERE id=@id", c => c.Parameters.AddWithValue("@id", id));
+            // Kullanıcıya ait mi?
+            var res = ReservationModel.Query(
+                "SELECT * FROM reservations WHERE id=@id",
+                c => c.Parameters.AddWithValue("@id", id)
+            );
             if (res.Count == 0 || Convert.ToInt32(res[0]["user_id"]) != userId)
             {
                 TempData["Error"] = "Rezervasyon bulunamadı veya size ait değil.";
                 return RedirectToAction(nameof(MyReservations));
             }
 
-            // Verify status
-            string status = (res[0]["status"] as string) ?? "Pending";
-            if (string.Equals(status, "Cancelled", StringComparison.OrdinalIgnoreCase))
+            string status = Convert.ToString(res[0]["status"]) ?? "Pending";
+
+            if (string.Equals(status, "Cancelled", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(status, "CANCELLED", StringComparison.OrdinalIgnoreCase))
             {
-                 TempData["Error"] = "İptal edilmiş rezervasyon için check-in yapılamaz.";
-                 return RedirectToAction(nameof(MyReservations));
+                TempData["Error"] = "İptal edilmiş rezervasyon için check-in yapılamaz.";
+                return RedirectToAction(nameof(MyReservations));
             }
+
             if (string.Equals(status, "CheckedIn", StringComparison.OrdinalIgnoreCase))
             {
-                 TempData["Info"] = "Zaten check-in yapılmış.";
-                 return RedirectToAction(nameof(MyReservations));
+                TempData["Info"] = "Zaten check-in yapılmış.";
+                return RedirectToAction(nameof(MyReservations));
             }
 
             ReservationModel.CheckInById(id);
@@ -251,16 +335,21 @@ namespace prgmlab3.Controllers
             return RedirectToAction(nameof(MyReservations));
         }
 
+        //  REZERVASYON İPTAL
         [HttpPost]
+        [Authorize]
         [ValidateAntiForgeryToken]
         public IActionResult CancelReservation(int id)
         {
             var userIdStr = User.FindFirst("UserId")?.Value;
-            if (string.IsNullOrEmpty(userIdStr)) return Unauthorized();
-            int userId = int.Parse(userIdStr);
+            if (!int.TryParse(userIdStr, out var userId))
+                return Unauthorized();
 
-            // Verify ownership and flight date
-            var res = ReservationModel.Query("SELECT * FROM reservations WHERE id=@id", c => c.Parameters.AddWithValue("@id", id));
+            // Kullanıcıya ait mi?
+            var res = ReservationModel.Query(
+                "SELECT * FROM reservations WHERE id=@id",
+                c => c.Parameters.AddWithValue("@id", id)
+            );
             if (res.Count == 0 || Convert.ToInt32(res[0]["user_id"]) != userId)
             {
                 TempData["Error"] = "Rezervasyon bulunamadı veya size ait değil.";
@@ -269,7 +358,9 @@ namespace prgmlab3.Controllers
 
             int flightId = Convert.ToInt32(res[0]["flight_id"]);
             var flight = FlightModel.GetById(flightId);
-            if (flight == null || flight.DepartureTime <= DateTime.Now)
+            var now = DateTime.Now;
+
+            if (flight == null || flight.DepartureTime <= now)
             {
                 TempData["Error"] = "Geçmiş uçuşlar iptal edilemez.";
                 return RedirectToAction(nameof(MyReservations));

@@ -1,20 +1,40 @@
+@model prgmlab3.Models.PlaneModel
+
 @{
-    ViewData["Title"] = "Add Plane";
+    ViewData["Title"] = "Uçak Ekle";
 }
 
 <div class="container mt-4">
-    <h2>Add Plane</h2>
+    <h2>Uçak Ekle</h2>
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger">@TempData["Error"]</div>
+    }
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success">@TempData["Success"]</div>
+    }
+
     <form asp-controller="Admin" asp-action="AddPlane" method="post">
         @Html.AntiForgeryToken()
+
+        @* Genel doğrulama hataları *@
+        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
         <div class="mb-3">
-            <label class="form-label">Name</label>
-            <input class="form-control" name="Name" required />
+            <label asp-for="Name" class="form-label">Uçak Adı</label>
+            <input asp-for="Name" class="form-control" required />
+            <span asp-validation-for="Name" class="text-danger"></span>
         </div>
+
         <div class="mb-3">
-            <label class="form-label">Seat Count</label>
-            <input type="number" class="form-control" name="SeatCount" required min="1" />
+            <label asp-for="SeatCount" class="form-label">Koltuk Sayısı</label>
+            <input asp-for="SeatCount" type="number" class="form-control" min="1" required />
+            <span asp-validation-for="SeatCount" class="text-danger"></span>
         </div>
-        <button type="submit" class="btn btn-primary">Save</button>
-        <a class="btn btn-secondary ms-2" asp-controller="Admin" asp-action="Planes">Cancel</a>
+
+        <button type="submit" class="btn btn-primary">Kaydet</button>
+        <a class="btn btn-secondary ms-2" asp-controller="Admin" asp-action="Planes">İptal</a>
     </form>
 </div>

@@ -1,10 +1,14 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using prgmlab3.data;
 using prgmlab3.Models;
 using System.Collections.Generic;
 
 namespace prgmlab3.Controllers
 {
+    // Admin tarafındaki tüm yönetimsel işlemleri yöneten controller.
+    // Uçak, havaalanı, uçuş, koltuk, kullanıcı ve rezervasyon yönetimi burada yapılır.
+    [Authorize(Roles = "Admin")]
     public class AdminController : Controller
     {
         public IActionResult Index()
@@ -34,7 +38,7 @@ namespace prgmlab3.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult AddPlane([FromForm] prgmlab3.Models.PlaneModel model)
+        public IActionResult AddPlane([FromForm] PlaneModel model)
         {
             try
             {
@@ -54,7 +58,10 @@ namespace prgmlab3.Controllers
                     return RedirectToAction(nameof(AddPlane));
                 }
 
-                var dupPlane = SqliteDbHelper.ExecuteScalar<int>("SELECT COUNT(*) FROM planes WHERE name=@name", cmd => cmd.Parameters.AddWithValue("@name", model.Name));
+                var dupPlane = SqliteDbHelper.ExecuteScalar<int>(
+                    "SELECT COUNT(*) FROM planes WHERE name=@name",
+                    cmd => cmd.Parameters.AddWithValue("@name", model.Name.Trim())
+                );
                 if (dupPlane > 0)
                 {
                     TempData["Error"] = "Aynı isimde bir uçak zaten mevcut.";
@@ -77,13 +84,17 @@ namespace prgmlab3.Controllers
         {
             try
             {
-                // check for flights referencing the plane
-                var fcount = SqliteDbHelper.ExecuteScalar<int>("SELECT COUNT(*) FROM flights WHERE plane_id=@id", cmd => cmd.Parameters.AddWithValue("@id", id));
+                // Bu uçağa bağlı uçuş var mı?
+                var fcount = SqliteDbHelper.ExecuteScalar<int>(
+                    "SELECT COUNT(*) FROM flights WHERE plane_id=@id",
+                    cmd => cmd.Parameters.AddWithValue("@id", id)
+                );
                 if (fcount > 0)
                 {
                     TempData["Error"] = "Bu uçak için uçuşlar mevcut: silmeden önce uçuşları kaldırın.";
                     return RedirectToAction(nameof(Planes));
                 }
+
                 PlaneModel.Delete(id);
                 TempData["Success"] = "Uçak silindi.";
             }
@@ -109,7 +120,7 @@ namespace prgmlab3.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult AddAirport([FromForm] prgmlab3.Models.AirportModel model)
+        public IActionResult AddAirport([FromForm] AirportModel model)
         {
             try
             {
@@ -123,26 +134,33 @@ namespace prgmlab3.Controllers
                     TempData["Error"] = "Havaalanı adı ve şehir gerekli.";
                     return RedirectToAction(nameof(AddAirport));
                 }
-                // Duplicate check for code or name
-                var dup = SqliteDbHelper.ExecuteScalar<int>("SELECT COUNT(*) FROM airports WHERE code=@code OR (city=@city AND name=@name)", cmd =>
-                {
-                    cmd.Parameters.AddWithValue("@code", model.Code ?? "");
-                    cmd.Parameters.AddWithValue("@city", model.City ?? "");
-                    cmd.Parameters.AddWithValue("@name", model.Name ?? "");
-                });
+
+                // Kod tekrar kontrolü
+                var dup = SqliteDbHelper.ExecuteScalar<int>(
+                    "SELECT COUNT(*) FROM airports WHERE code=@code OR (city=@city AND name=@name)",
+                    cmd =>
+                    {
+                        cmd.Parameters.AddWithValue("@code", model.Code?.Trim() ?? "");
+                        cmd.Parameters.AddWithValue("@city", model.City?.Trim() ?? "");
+                        cmd.Parameters.AddWithValue("@name", model.Name?.Trim() ?? "");
+                    });
+
                 if (dup > 0)
                 {
                     TempData["Error"] = "Benzer bir havaalanı zaten mevcut.";
                     return RedirectToAction(nameof(AddAirport));
                 }
-                // Insert
-                SqliteDbHelper.ExecuteNonQuery("INSERT INTO airports (code, city, name, country) VALUES (@code,@city,@name,@country)", cmd =>
-                {
-                    cmd.Parameters.AddWithValue("@code", model.Code ?? "");
-                    cmd.Parameters.AddWithValue("@city", model.City ?? "");
-                    cmd.Parameters.AddWithValue("@name", model.Name ?? "");
-                    cmd.Parameters.AddWithValue("@country", model.Country ?? "");
-                });
+
+                SqliteDbHelper.ExecuteNonQuery(
+                    "INSERT INTO airports (code, city, name, country) VALUES (@code,@city,@name,@country)",
+                    cmd =>
+                    {
+                        cmd.Parameters.AddWithValue("@code", model.Code?.Trim() ?? "");
+                        cmd.Parameters.AddWithValue("@city", model.City?.Trim() ?? "");
+                        cmd.Parameters.AddWithValue("@name", model.Name?.Trim() ?? "");
+                        cmd.Parameters.AddWithValue("@country", model.Country?.Trim() ?? "");
+                    });
+
                 TempData["Success"] = "Havaalanı eklendi.";
             }
             catch (System.Exception ex)
@@ -158,14 +176,21 @@ namespace prgmlab3.Controllers
         {
             try
             {
-                // check for flights referencing the airport as departure or arrival
-                var fcount = SqliteDbHelper.ExecuteScalar<int>("SELECT COUNT(*) FROM flights WHERE departure_location=@id OR arrival_location=@id", cmd => cmd.Parameters.AddWithValue("@id", id));
+                // Bu havaalanına bağlı kalkış veya varış var mı?
+                var fcount = SqliteDbHelper.ExecuteScalar<int>(
+                    "SELECT COUNT(*) FROM flights WHERE departure_location=@id OR arrival_location=@id",
+                    cmd => cmd.Parameters.AddWithValue("@id", id)
+                );
                 if (fcount > 0)
                 {
                     TempData["Error"] = "Bu havaalanı için uçuşlar mevcut: silmeden önce uçuşları kaldırın.";
                     return RedirectToAction(nameof(Airports));
                 }
-                SqliteDbHelper.ExecuteNonQuery("DELETE FROM airports WHERE id=@id", cmd => cmd.Parameters.AddWithValue("@id", id));
+
+                SqliteDbHelper.ExecuteNonQuery(
+                    "DELETE FROM airports WHERE id=@id",
+                    cmd => cmd.Parameters.AddWithValue("@id", id)
+                );
                 TempData["Success"] = "Havaalanı silindi.";
             }
             catch (System.Exception ex)
@@ -179,12 +204,17 @@ namespace prgmlab3.Controllers
         public IActionResult Flights()
         {
             var flights = SqliteDbHelper.ExecuteQuery(@"
-                SELECT f.id, p.name AS plane_name, a1.city AS departure_city, a2.city AS arrival_city, 
-                       f.departure_time, f.arrival_time, f.price
+                SELECT f.id,
+                       p.name AS plane_name,
+                       a1.city AS departure_city,
+                       a2.city AS arrival_city, 
+                       f.departure_time,
+                       f.arrival_time,
+                       f.price
                 FROM flights f
-                JOIN planes p ON f.plane_id = p.id
+                JOIN planes   p  ON f.plane_id = p.id
                 JOIN airports a1 ON f.departure_location = a1.id
-                JOIN airports a2 ON f.arrival_location = a2.id
+                JOIN airports a2 ON f.arrival_location   = a2.id
             ", null);
             return View(flights);
         }
@@ -201,7 +231,7 @@ namespace prgmlab3.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult AddFlight([FromForm] prgmlab3.Models.FlightModel model)
+        public IActionResult AddFlight([FromForm] FlightModel model)
         {
             try
             {
@@ -211,7 +241,7 @@ namespace prgmlab3.Controllers
                     return RedirectToAction(nameof(Flights));
                 }
 
-                // Basic validation
+                // Temel validasyonlar
                 if (model.PlaneId <= 0)
                 {
                     TempData["Error"] = "Uçak bilgisi eksik.";
@@ -229,31 +259,40 @@ namespace prgmlab3.Controllers
                 }
                 if (model.DepartureTime >= model.ArrivalTime)
                 {
-                    TempData["Error"] = "Varış zamanı kalkış zamanından sonra olmalıdır.";
+                    TempData["Error"] = "Varış zamanı, kalkış zamanından sonra olmalıdır.";
                     return RedirectToAction(nameof(AddFlight));
                 }
-                if (model.Price < 0)
+                if (model.Price <= 0)
                 {
-                    TempData["Error"] = "Fiyat negatif olamaz.";
+                    TempData["Error"] = "Baz fiyat 0'dan büyük olmalıdır.";
                     return RedirectToAction(nameof(AddFlight));
                 }
 
-                // Validate existence of referenced entities
-                var plane = SqliteDbHelper.ExecuteQuery("SELECT id FROM planes WHERE id=@id", cmd => cmd.Parameters.AddWithValue("@id", model.PlaneId));
+                var plane = SqliteDbHelper.ExecuteQuery(
+                    "SELECT id FROM planes WHERE id=@id",
+                    cmd => cmd.Parameters.AddWithValue("@id", model.PlaneId)
+                );
                 if (plane.Count == 0)
                 {
                     TempData["Error"] = "Seçilen uçak bulunamadı.";
                     return RedirectToAction(nameof(AddFlight));
                 }
-                var dep = SqliteDbHelper.ExecuteQuery("SELECT id FROM airports WHERE id=@id", cmd => cmd.Parameters.AddWithValue("@id", model.DepartureLocation));
-                var arr = SqliteDbHelper.ExecuteQuery("SELECT id FROM airports WHERE id=@id", cmd => cmd.Parameters.AddWithValue("@id", model.ArrivalLocation));
+
+                var dep = SqliteDbHelper.ExecuteQuery(
+                    "SELECT id FROM airports WHERE id=@id",
+                    cmd => cmd.Parameters.AddWithValue("@id", model.DepartureLocation)
+                );
+                var arr = SqliteDbHelper.ExecuteQuery(
+                    "SELECT id FROM airports WHERE id=@id",
+                    cmd => cmd.Parameters.AddWithValue("@id", model.ArrivalLocation)
+                );
                 if (dep.Count == 0 || arr.Count == 0)
                 {
                     TempData["Error"] = "Seçilen havaalanı(lar) bulunamadı.";
                     return RedirectToAction(nameof(AddFlight));
                 }
 
-                // Optional: check for overlapping flights for the same plane
+                // Aynı uçak için zaman çakışmasını kontrol etme
                 var overlaps = SqliteDbHelper.ExecuteScalar<int>(
                     "SELECT COUNT(*) FROM flights WHERE plane_id=@pid AND ((departure_time < @arr AND arrival_time > @dep))",
                     cmd =>
@@ -262,6 +301,7 @@ namespace prgmlab3.Controllers
                         cmd.Parameters.AddWithValue("@dep", model.DepartureTime.ToString("s"));
                         cmd.Parameters.AddWithValue("@arr", model.ArrivalTime.ToString("s"));
                     });
+
                 if (overlaps > 0)
                 {
                     TempData["Error"] = "Aynı uçak için zaman çakışması mevcut.";
@@ -280,19 +320,87 @@ namespace prgmlab3.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        public IActionResult EditFlight(int id, DateTime departureTime, DateTime arrivalTime)
+        {
+            try
+            {
+                var flight = FlightModel.GetById(id);
+                if (flight == null)
+                {
+                    TempData["Error"] = "Uçuş bulunamadı.";
+                    return RedirectToAction(nameof(Flights));
+                }
+
+                if (departureTime >= arrivalTime)
+                {
+                    TempData["Error"] = "Varış zamanı, kalkış zamanından sonra olmalıdır.";
+                    return RedirectToAction(nameof(Flights));
+                }
+
+                // Aynı uçak için çakışma kontrolü
+                var overlaps = SqliteDbHelper.ExecuteScalar<int>(
+                    @"SELECT COUNT(*) FROM flights
+                    WHERE plane_id = @pid
+                        AND id <> @fid
+                        AND (departure_time < @arr AND arrival_time > @dep)",
+                    cmd =>
+                    {
+                        cmd.Parameters.AddWithValue("@pid", flight.PlaneId);
+                        cmd.Parameters.AddWithValue("@fid", flight.Id);
+                        cmd.Parameters.AddWithValue("@dep", departureTime.ToString("s"));
+                        cmd.Parameters.AddWithValue("@arr", arrivalTime.ToString("s"));
+                    });
+
+                if (overlaps > 0)
+                {
+                    TempData["Error"] = "Bu saatlerde aynı uçak için başka bir uçuş var (zaman çakışması).";
+                    return RedirectToAction(nameof(Flights));
+                }
+
+                // Saatleri güncelleme
+                flight.DepartureTime = departureTime;
+                flight.ArrivalTime   = arrivalTime;
+                flight.Save();
+
+                TempData["Success"] = "Uçuş saatleri güncellendi.";
+            }
+            catch (Exception ex)
+            {
+                TempData["Error"] = "Güncelleme sırasında hata: " + ex.Message;
+            }
+
+            return RedirectToAction(nameof(Flights));
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
         public IActionResult DeleteFlight(int id)
         {
             try
             {
-                // Check for reservations referencing the flight
-                var resCount = SqliteDbHelper.ExecuteScalar<int>("SELECT COUNT(*) FROM reservations WHERE flight_id=@id", cmd => cmd.Parameters.AddWithValue("@id", id));
-                if (resCount > 0)
+                // Aktif rezervasyon var mı?
+                var activeCount = SqliteDbHelper.ExecuteScalar<int>(
+                    @"SELECT COUNT(*) 
+                      FROM reservations 
+                      WHERE flight_id=@id 
+                        AND (status IS NULL OR UPPER(status) <> 'CANCELLED')",
+                    cmd => cmd.Parameters.AddWithValue("@id", id));
+
+                if (activeCount > 0)
                 {
-                    TempData["Error"] = "Bu uçuş için rezervasyonlar mevcut: silmeden önce rezervasyonları kaldırın.";
+                    TempData["Error"] = "Bu uçuş için aktif rezervasyonlar mevcut: silmeden önce bu rezervasyonları iptal edin.";
                     return RedirectToAction(nameof(Flights));
                 }
+
+                // Bu uçuşa bağlı bütün rezervasyon satırlarını sil
+                SqliteDbHelper.ExecuteNonQuery(
+                    "DELETE FROM reservations WHERE flight_id=@id",
+                    cmd => cmd.Parameters.AddWithValue("@id", id));
+
+                // Uçuşu sil
                 FlightModel.Delete(id);
-                TempData["Success"] = "Uçuş silindi.";
+
+                TempData["Success"] = "Uçuş ve ilişkili rezervasyon kayıtları silindi.";
             }
             catch (System.Exception ex)
             {
@@ -305,16 +413,30 @@ namespace prgmlab3.Controllers
         public IActionResult Seats(int? planeId)
         {
             var sql = @"
-                SELECT s.id, s.seat_number, s.class, p.name AS plane_name, s.plane_id
+                SELECT s.id,
+                       s.seat_number,
+                       s.class,
+                       p.name AS plane_name,
+                       s.plane_id
                 FROM seats s
                 JOIN planes p ON s.plane_id = p.id
             ";
+
             if (planeId.HasValue)
             {
-                var seats = SqliteDbHelper.ExecuteQuery(sql + " WHERE s.plane_id = @pid", cmd => cmd.Parameters.AddWithValue("@pid", planeId.Value));
+                var seats = SqliteDbHelper.ExecuteQuery(
+                    sql + " WHERE s.plane_id = @pid",
+                    cmd => cmd.Parameters.AddWithValue("@pid", planeId.Value)
+                );
+
                 ViewBag.FilterPlaneId = planeId.Value;
-                var planeNameRows = SqliteDbHelper.ExecuteQuery("SELECT name FROM planes WHERE id=@id", cmd => cmd.Parameters.AddWithValue("@id", planeId.Value));
-                if (planeNameRows.Count > 0) ViewBag.FilterPlaneName = planeNameRows[0]["name"];
+                var planeNameRows = SqliteDbHelper.ExecuteQuery(
+                    "SELECT name FROM planes WHERE id=@id",
+                    cmd => cmd.Parameters.AddWithValue("@id", planeId.Value)
+                );
+                if (planeNameRows.Count > 0)
+                    ViewBag.FilterPlaneName = planeNameRows[0]["name"];
+
                 return View(seats);
             }
 
@@ -333,30 +455,40 @@ namespace prgmlab3.Controllers
                     TempData["Error"] = "Eksik veri.";
                     return RedirectToAction(nameof(Seats), new { planeId });
                 }
-                // Validate plane exists
-                var plane = SqliteDbHelper.ExecuteQuery("SELECT id FROM planes WHERE id=@id", cmd => cmd.Parameters.AddWithValue("@id", planeId));
+
+                // Uçak var mı?
+                var plane = SqliteDbHelper.ExecuteQuery(
+                    "SELECT id FROM planes WHERE id=@id",
+                    cmd => cmd.Parameters.AddWithValue("@id", planeId)
+                );
                 if (plane.Count == 0)
                 {
                     TempData["Error"] = "Uçak bulunamadı.";
                     return RedirectToAction(nameof(Seats));
                 }
-                // Validate seat doesn't exist
-                var exists = SqliteDbHelper.ExecuteScalar<int>("SELECT COUNT(*) FROM seats WHERE plane_id=@pid AND seat_number=@sn", cmd =>
-                {
-                    cmd.Parameters.AddWithValue("@pid", planeId);
-                    cmd.Parameters.AddWithValue("@sn", seatNumber);
-                });
+
+                // Aynı koltuk daha önce tanımlanmış mı?
+                var exists = SqliteDbHelper.ExecuteScalar<int>(
+                    "SELECT COUNT(*) FROM seats WHERE plane_id=@pid AND seat_number=@sn",
+                    cmd =>
+                    {
+                        cmd.Parameters.AddWithValue("@pid", planeId);
+                        cmd.Parameters.AddWithValue("@sn", seatNumber.Trim());
+                    });
                 if (exists > 0)
                 {
                     TempData["Error"] = "Bu koltuk zaten var.";
                     return RedirectToAction(nameof(Seats), new { planeId });
                 }
-                SqliteDbHelper.ExecuteNonQuery("INSERT INTO seats (plane_id, seat_number, class) VALUES (@pid, @sn, @c)", cmd =>
-                {
-                    cmd.Parameters.AddWithValue("@pid", planeId);
-                    cmd.Parameters.AddWithValue("@sn", seatNumber);
-                    cmd.Parameters.AddWithValue("@c", seatClass);
-                });
+
+                SqliteDbHelper.ExecuteNonQuery(
+                    "INSERT INTO seats (plane_id, seat_number, class) VALUES (@pid, @sn, @c)",
+                    cmd =>
+                    {
+                        cmd.Parameters.AddWithValue("@pid", planeId);
+                        cmd.Parameters.AddWithValue("@sn", seatNumber.Trim());
+                        cmd.Parameters.AddWithValue("@c", seatClass);
+                    });
                 TempData["Success"] = "Koltuk eklendi.";
             }
             catch (System.Exception ex)
@@ -372,14 +504,31 @@ namespace prgmlab3.Controllers
         {
             try
             {
-                var resCount = SqliteDbHelper.ExecuteScalar<int>("SELECT COUNT(*) FROM reservations WHERE seat_id=@id", cmd => cmd.Parameters.AddWithValue("@id", id));
-                if (resCount > 0)
+                // Aktif rezervasyon var mı?
+                var activeCount = SqliteDbHelper.ExecuteScalar<int>(
+                    @"SELECT COUNT(*) 
+                      FROM reservations 
+                      WHERE seat_id=@id 
+                        AND (status IS NULL OR UPPER(status) <> 'CANCELLED')",
+                    cmd => cmd.Parameters.AddWithValue("@id", id));
+
+                if (activeCount > 0)
                 {
-                    TempData["Error"] = "Bu koltuk için rezervasyonlar mevcut: silmeden önce rezervasyonları kaldırın.";
+                    TempData["Error"] = "Bu koltuk için aktif rezervasyonlar mevcut: silmeden önce bu rezervasyonları iptal edin.";
                     return RedirectToAction(nameof(Seats), new { planeId });
                 }
-                SqliteDbHelper.ExecuteNonQuery("DELETE FROM seats WHERE id=@id", cmd => cmd.Parameters.AddWithValue("@id", id));
-                TempData["Success"] = "Koltuk silindi.";
+
+                // Bu koltuğa bağlı bütün rezervasyon satırlarını sil
+                SqliteDbHelper.ExecuteNonQuery(
+                    "DELETE FROM reservations WHERE seat_id=@id",
+                    cmd => cmd.Parameters.AddWithValue("@id", id));
+
+                // Koltuğu sil
+                SqliteDbHelper.ExecuteNonQuery(
+                    "DELETE FROM seats WHERE id=@id",
+                    cmd => cmd.Parameters.AddWithValue("@id", id));
+
+                TempData["Success"] = "Koltuk ve ilişkili rezervasyon kayıtları silindi.";
             }
             catch (System.Exception ex)
             {
@@ -392,11 +541,16 @@ namespace prgmlab3.Controllers
         public IActionResult Reservations()
         {
             var reservations = SqliteDbHelper.ExecuteQuery(@"
-                SELECT r.id, u.username, f.id AS flight_id, r.price, r.status, s.seat_number
+                SELECT r.id,
+                       u.username,
+                       f.id AS flight_id,
+                       r.price,
+                       r.status,
+                       s.seat_number
                 FROM reservations r
-                JOIN users u ON r.user_id = u.id
+                JOIN users   u ON r.user_id  = u.id
                 JOIN flights f ON r.flight_id = f.id
-                JOIN seats s ON r.seat_id = s.id
+                JOIN seats   s ON r.seat_id  = s.id
             ", null);
             return View(reservations);
         }
@@ -413,11 +567,13 @@ namespace prgmlab3.Controllers
                     WHERE id = @id AND (status IS NULL OR status <> @st);
                 ";
 
-                var affected = SqliteDbHelper.Execute(sql, cmd =>
-                {
-                    cmd.Parameters.AddWithValue("@id", id);
-                    cmd.Parameters.AddWithValue("@st", "Cancelled");
-                });
+                var affected = SqliteDbHelper.ExecuteNonQuery(
+                    sql,
+                    cmd =>
+                    {
+                        cmd.Parameters.AddWithValue("@id", id);
+                        cmd.Parameters.AddWithValue("@st", "CANCELLED");
+                    });
 
                 if (affected > 0)
                     TempData["Success"] = "Rezervasyon iptal edildi.";

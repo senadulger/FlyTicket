@@ -1,10 +1,12 @@
 @model List<Dictionary<string, object>>
+
 @{
-    ViewData["Title"] = "Planes";
+    ViewData["Title"] = "Uçaklar";
 }
 
 <div class="container mt-4">
-    <h2>Planes</h2>
+    <h2>Uçaklar</h2>
+
     @if (TempData["Success"] != null)
     {
         <div class="alert alert-success mt-3">@TempData["Success"]</div>
@@ -13,34 +15,57 @@
     {
         <div class="alert alert-danger mt-3">@TempData["Error"]</div>
     }
+
     <div class="mb-3">
-        <a class="btn btn-primary" asp-controller="Admin" asp-action="AddPlane">Add Plane</a>
+        <a class="btn btn-primary" asp-controller="Admin" asp-action="AddPlane">Uçak Ekle</a>
     </div>
-    <table class="table table-bordered table-hover mt-3">
-        <thead class="table-dark">
-            <tr>
-                <th>ID</th>
-                <th>Name</th>
-                <th>Seat Count</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var row in Model)
-            {
+
+    @if (Model == null || Model.Count == 0)
+    {
+        <div class="alert alert-info">Kayıtlı uçak bulunmamaktadır.</div>
+    }
+    else
+    {
+        <table class="table table-bordered table-hover mt-3">
+            <thead class="table-dark">
                 <tr>
-                    <td>@row["id"]</td>
-                    <td>@row["name"]</td>
-                    <td>@row["seat_count"]</td>
-                    <td>
-                        <a class="btn btn-sm btn-secondary" asp-controller="Admin" asp-action="Seats" asp-route-planeId="@(row["id"])">View Seats</a>
-                        <form action="@Url.Action("DeletePlane","Admin")" method="post" style="display:inline; margin-left:6px;">
-                            @Html.AntiForgeryToken()
-                            <input type="hidden" name="id" value="@(row["id"])" />
-                            <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Bu uçağı silmek istiyor musunuz?');">Sil</button>
-                        </form>
-                    </td>
+                    <th>ID</th>
+                    <th>Uçak Adı</th>
+                    <th>Koltuk Sayısı</th>
+                    <th>İşlemler</th>
                 </tr>
-            }
-        </tbody>
-    </table>
+            </thead>
+            <tbody>
+                @foreach (var row in Model)
+                {
+                    <tr>
+                        <td>@row["id"]</td>
+                        <td>@row["name"]</td>
+                        <td>@row["seat_count"]</td>
+                        <td>
+                            <a class="btn btn-sm btn-info"
+                               asp-controller="Admin"
+                               asp-action="Seats"
+                               asp-route-planeId="@(row["id"])">
+                                Koltukları Gör
+                            </a>
+
+                            <form asp-controller="Admin"
+                                  asp-action="DeletePlane"
+                                  method="post"
+                                  style="display:inline; margin-left:6px;">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="id" value="@(row["id"])" />
+                                <button type="submit"
+                                        class="btn btn-sm btn-danger"
+                                        onclick="return confirm('Bu uçağı silmek istiyor musunuz?');">
+                                    Sil
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
 </div>

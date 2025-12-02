@@ -1,15 +1,77 @@
 @{
-    ViewData["Title"] = "Admin Panel";
+    ViewData["Title"] = "Admin Paneli";
 }
 
 <div class="container mt-4">
-    <h1 class="mb-4">Admin Panel</h1>
-    <div class="list-group">
-        <a href="/Admin/Users" class="list-group-item list-group-item-action">👤 Users</a>
-        <a href="/Admin/Planes" class="list-group-item list-group-item-action">✈️ Planes</a>
-        <a href="/Admin/Airports" class="list-group-item list-group-item-action">🏙️ Airports</a>
-        <a href="/Admin/Flights" class="list-group-item list-group-item-action">🕓 Flights</a>
-        <a href="/Admin/Seats" class="list-group-item list-group-item-action">💺 Seats</a>
-        <a href="/Admin/Reservations" class="list-group-item list-group-item-action">📋 Reservations</a>
+    <h1 class="mb-4">Admin Paneli</h1>
+
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-3">
+
+        <div class="col">
+            <a asp-controller="Admin" asp-action="Users" class="text-decoration-none">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <h5 class="card-title">Kullanıcılar</h5>
+                        <p class="card-text">Sistemde kayıtlı kullanıcıları görüntüle.</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+        <div class="col">
+            <a asp-controller="Admin" asp-action="Planes" class="text-decoration-none">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <h5 class="card-title">Uçaklar</h5>
+                        <p class="card-text">Uçak ekle, listele ve yönet.</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+        <div class="col">
+            <a asp-controller="Admin" asp-action="Airports" class="text-decoration-none">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <h5 class="card-title">Havaalanları</h5>
+                        <p class="card-text">Havaalanı kayıtlarını düzenle.</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+        <div class="col">
+            <a asp-controller="Admin" asp-action="Flights" class="text-decoration-none">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <h5 class="card-title">Uçuşlar</h5>
+                        <p class="card-text">Uçuş ekle, listele ve zamanlamayı yönet.</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+        <div class="col">
+            <a asp-controller="Admin" asp-action="Seats" class="text-decoration-none">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <h5 class="card-title">Koltuklar</h5>
+                        <p class="card-text">Uçaklara ait koltuk düzenini yönet.</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+        <div class="col">
+            <a asp-controller="Admin" asp-action="Reservations" class="text-decoration-none">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <h5 class="card-title">Rezervasyonlar</h5>
+                        <p class="card-text">Rezervasyon kayıtlarını görüntüle ve iptal et.</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+
     </div>
 </div>

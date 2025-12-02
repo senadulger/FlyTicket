@@ -1,58 +1,108 @@
 @model List<Dictionary<string, object>>
+
 @{
-    ViewData["Title"] = "Seats";
+    ViewData["Title"] = "Koltuklar";
+    string planeName = ViewBag.FilterPlaneName as string;
 }
 
 <div class="container mt-4">
-    <h2>Seats @if (ViewBag.FilterPlaneName != null) { <text>- @ViewBag.FilterPlaneName</text> }</h2>
+    <h2>
+        Koltuklar
+        @if (!string.IsNullOrEmpty(planeName))
+        {
+            <span class="text-muted">- @planeName</span>
+        }
+    </h2>
+
+    @* TempData mesajları *@
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success mt-3">@TempData["Success"]</div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger mt-3">@TempData["Error"]</div>
+    }
+
+    @* Belirli bir uçak için filtrelenmişse, üstte koltuk ekleme formu göster *@
     @if (ViewBag.FilterPlaneId != null)
     {
         <div class="mb-3">
             <form asp-controller="Admin" asp-action="AddSeat" method="post" class="row g-2">
                 @Html.AntiForgeryToken()
                 <input type="hidden" name="planeId" value="@(ViewBag.FilterPlaneId)" />
-                <div class="col-md-3">
-                    <input type="text" class="form-control" name="seatNumber" placeholder="Seat Number (e.g. 1A)" required />
+                <div class="col-md-4 col-lg-3">
+                    <input type="text"
+                           class="form-control"
+                           name="seatNumber"
+                           placeholder="Koltuk No"
+                           required />
                 </div>
-                <div class="col-md-2">
+                <div class="col-md-3 col-lg-2">
                     <select class="form-select" name="seatClass">
-                        <option value="0">Economy</option>
+                        <option value="0">Ekonomi</option>
                         <option value="1">Business</option>
                     </select>
                 </div>
-                <div class="col-md-2">
-                    <button type="submit" class="btn btn-primary">Add Seat</button>
+                <div class="col-md-3 col-lg-2">
+                    <button type="submit" class="btn btn-primary">Koltuk Ekle</button>
                 </div>
             </form>
         </div>
     }
-    <table class="table table-bordered table-hover mt-3">
-        <thead class="table-dark">
-            <tr>
-                <th>ID</th>
-                <th>Seat Number</th>
-                <th>Class</th>
-                <th>Plane</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var row in Model)
-            {
+
+    @if (Model == null || Model.Count == 0)
+    {
+        <div class="alert alert-info mt-3">
+            Kayıtlı koltuk bulunmamaktadır.
+        </div>
+    }
+    else
+    {
+        <table class="table table-bordered table-hover mt-3">
+            <thead class="table-dark">
                 <tr>
-                    <td>@row["id"]</td>
-                    <td>@row["seat_number"]</td>
-                    <td>@(Convert.ToInt32(row["class"]) == 1 ? "Business" : "Economy")</td>
-                    <td>@row["plane_name"]</td>
-                    <td>
-                        <form action="@Url.Action("DeleteSeat","Admin")" method="post" style="display:inline">
-                            @Html.AntiForgeryToken()
-                            <input type="hidden" name="id" value="@(row["id"])" />
-                            <input type="hidden" name="planeId" value="@(ViewBag.FilterPlaneId ?? Convert.ToInt32(row["plane_id"]))" />
-                            <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Bu koltuğu silmek istiyor musunuz?');">Sil</button>
-                        </form>
-                    </td>
+                    <th>ID</th>
+                    <th>Koltuk No</th>
+                    <th>Sınıf</th>
+                    <th>Uçak</th>
+                    <th style="width:120px;">İşlemler</th>
                 </tr>
-            }
-        </tbody>
-    </table>
+            </thead>
+            <tbody>
+                @foreach (var row in Model)
+                {
+                    var cls = Convert.ToInt32(row["class"]);
+                    var classText = cls == 1 ? "Business" : "Ekonomi";
+                    var badgeClass = cls == 1 ? "bg-info" : "bg-danger";
+
+                    <tr>
+                        <td>@row["id"]</td>
+                        <td>@row["seat_number"]</td>
+                        <td>
+                            <span class="badge @badgeClass">@classText</span>
+                        </td>
+                        <td>@row["plane_name"]</td>
+                        <td>
+                            <form asp-controller="Admin"
+                                  asp-action="DeleteSeat"
+                                  method="post"
+                                  style="display:inline">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="id" value="@(row["id"])" />
+                                <input type="hidden"
+                                       name="planeId"
+                                       value="@(ViewBag.FilterPlaneId ?? Convert.ToInt32(row["plane_id"]))" />
+                                <button type="submit"
+                                        class="btn btn-sm btn-danger"
+                                        onclick="return confirm('Bu koltuğu silmek istiyor musunuz?');">
+                                    Sil
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
 </div>

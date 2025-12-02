@@ -1,29 +1,63 @@
 @model List<Dictionary<string, object>>
+
 @{
-    ViewData["Title"] = "Users";
+    ViewData["Title"] = "Kullanıcılar";
 }
 
 <div class="container mt-4">
-    <h2>Users</h2>
-    <table class="table table-bordered table-hover mt-3">
-        <thead class="table-dark">
-            <tr>
-                <th>ID</th>
-                <th>Username</th>
-                <th>Mail</th>
-                <th>Role</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var row in Model)
-            {
+    <h2>Kullanıcılar</h2>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success mt-3">@TempData["Success"]</div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger mt-3">@TempData["Error"]</div>
+    }
+
+    @if (Model == null || Model.Count == 0)
+    {
+        <div class="alert alert-info mt-3">
+            Kayıtlı kullanıcı bulunmamaktadır.
+        </div>
+    }
+    else
+    {
+        <table class="table table-bordered table-hover mt-3">
+            <thead class="table-dark">
                 <tr>
-                    <td>@row["id"]</td>
-                    <td>@row["username"]</td>
-                    <td>@row["mail"]</td>
-                    <td>@(Convert.ToInt32(row["role"]) == 1 ? "Admin" : "User")</td>
+                    <th>ID</th>
+                    <th>TC No</th>
+                    <th>Ad - Soyad</th>
+                    <th>E-posta</th>
+                    <th>Doğum Tarihi</th>
+                    <th>Telefon</th>
+                    <th>Rol</th>
                 </tr>
-            }
-        </tbody>
-    </table>
+            </thead>
+            <tbody>
+                @foreach (var row in Model)
+                {
+                    var roleVal = Convert.ToInt32(row["role"]);
+                    var roleName = roleVal == 1 ? "Admin" : "Kullanıcı";
+                    var roleBadge = roleVal == 1 ? "bg-primary" : "bg-warning";
+                    var birthDate = row["birth_date"] != DBNull.Value ? Convert.ToDateTime(row["birth_date"]).ToString("dd.MM.yyyy") : "-";
+                    var fullName = $"{row["first_name"]} {row["last_name"]}";
+
+                    <tr>
+                        <td>@row["id"]</td>
+                        <td>@row["tc_no"]</td>
+                        <td>@fullName</td>
+                        <td>@row["mail"]</td>
+                        <td>@birthDate</td>
+                        <td>@row["phone"]</td>
+                        <td>
+                            <span class="badge @roleBadge">@roleName</span>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
 </div>

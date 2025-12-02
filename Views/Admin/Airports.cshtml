@@ -1,10 +1,12 @@
 @model List<Dictionary<string, object>>
+
 @{
-    ViewData["Title"] = "Airports";
+    ViewData["Title"] = "Havaalanları";
 }
 
 <div class="container mt-4">
-    <h2>Airports</h2>
+    <h2>Havaalanları</h2>
+
     @if (TempData["Success"] != null)
     {
         <div class="alert alert-success mt-3">@TempData["Success"]</div>
@@ -13,37 +15,54 @@
     {
         <div class="alert alert-danger mt-3">@TempData["Error"]</div>
     }
+
     <div class="mb-3">
-        <a class="btn btn-primary" asp-controller="Admin" asp-action="AddAirport">Add Airport</a>
+        <a class="btn btn-primary" asp-controller="Admin" asp-action="AddAirport">Havaalanı Ekle</a>
     </div>
-    <table class="table table-bordered table-hover mt-3">
-        <thead class="table-dark">
-            <tr>
-                <th>ID</th>
-                <th>Code</th>
-                <th>City</th>
-                <th>Name</th>
-                <th>Country</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var row in Model)
-            {
+
+    @if (Model == null || Model.Count == 0)
+    {
+        <div class="alert alert-info">Kayıtlı havaalanı bulunmamaktadır.</div>
+    }
+    else
+    {
+        <table class="table table-bordered table-hover mt-3">
+            <thead class="table-dark">
                 <tr>
-                    <td>@row["id"]</td>
-                    <td>@row["code"]</td>
-                    <td>@row["city"]</td>
-                    <td>@row["name"]</td>
-                    <td>@row["country"]</td>
-                    <td>
-                        <form action="@Url.Action("DeleteAirport","Admin")" method="post" style="display:inline">
-                            @Html.AntiForgeryToken()
-                            <input type="hidden" name="id" value="@(row["id"])" />
-                            <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Bu havaalanını silmek istiyor musunuz?');">Sil</button>
-                        </form>
-                    </td>
+                    <th>ID</th>
+                    <th>Kod</th>
+                    <th>Şehir</th>
+                    <th>İsim</th>
+                    <th>Ülke</th>
+                    <th>İşlemler</th>
                 </tr>
-            }
-        </tbody>
-    </table>
+            </thead>
+            <tbody>
+                @foreach (var row in Model)
+                {
+                    <tr>
+                        <td>@row["id"]</td>
+                        <td>@row["code"]</td>
+                        <td>@row["city"]</td>
+                        <td>@row["name"]</td>
+                        <td>@row["country"]</td>
+                        <td>
+                            <form asp-controller="Admin"
+                                  asp-action="DeleteAirport"
+                                  method="post"
+                                  style="display:inline">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="id" value="@(row["id"])" />
+                                <button type="submit"
+                                        class="btn btn-sm btn-danger"
+                                        onclick="return confirm('Bu havaalanını silmek istiyor musunuz?');">
+                                    Sil
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
 </div>

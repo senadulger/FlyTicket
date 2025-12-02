@@ -1,4 +1,3 @@
-// SqliteDbHelper.cs
 using System;
 using System.Collections.Generic;
 using Microsoft.Data.Sqlite;
@@ -22,7 +21,12 @@ namespace prgmlab3.data
         username VARCHAR NOT NULL,
         password VARCHAR NOT NULL,
         role SMALLINT NOT NULL,
-        mail VARCHAR
+        mail VARCHAR,
+        tc_no VARCHAR,
+        first_name VARCHAR,
+        last_name VARCHAR,
+        birth_date DATETIME,
+        phone VARCHAR
     );
 
     CREATE TABLE IF NOT EXISTS planes (
@@ -73,6 +77,7 @@ namespace prgmlab3.data
     );
     ";
             cmd.ExecuteNonQuery();
+            SeedAdmin();
         }
 
         public static SqliteConnection GetConnection()
@@ -98,7 +103,6 @@ namespace prgmlab3.data
             return affected;
         }
 
-        // Execute non-query (INSERT/UPDATE/DELETE)
         public static int ExecuteNonQuery(string sql, Action<SqliteCommand> addParams = null)
         {
             using var conn = GetConnection();
@@ -108,7 +112,6 @@ namespace prgmlab3.data
             return cmd.ExecuteNonQuery();
         }
 
-        // Execute scalar (last_insert_rowid, COUNT, etc.)
         public static T ExecuteScalar<T>(string sql, Action<SqliteCommand> addParams = null)
         {
             using var conn = GetConnection();
@@ -120,7 +123,6 @@ namespace prgmlab3.data
             return (T)Convert.ChangeType(res, typeof(T));
         }
 
-        // Execute query (SELECT)
         public static List<Dictionary<string, object>> ExecuteQuery(string sql, Action<SqliteCommand> addParams = null)
         {
             var rows = new List<Dictionary<string, object>>();
@@ -139,7 +141,6 @@ namespace prgmlab3.data
             return rows;
         }
 
-        // Parametre ekleme helper
         public static void AddParameter(SqliteCommand cmd, string name, object value)
         {
             var param = cmd.CreateParameter();
@@ -148,5 +149,30 @@ namespace prgmlab3.data
             cmd.Parameters.Add(param);
         }
 
+        public static void SeedAdmin()
+        {
+            var count = ExecuteScalar<long>("SELECT COUNT(*) FROM users WHERE username = @un", cmd =>
+            {
+                cmd.Parameters.AddWithValue("@un", "Admin Admin");
+            });
+
+            if (count == 0)
+            {
+                Execute(@"
+                    INSERT INTO users (username, password, role, mail, first_name, last_name, tc_no, phone, birth_date)
+                    VALUES (@un, @pass, @role, @mail, @fn, @ln, @tc, @ph, @bd)", cmd =>
+                {
+                    cmd.Parameters.AddWithValue("@un", "Admin Admin");
+                    cmd.Parameters.AddWithValue("@pass", "admin");
+                    cmd.Parameters.AddWithValue("@role", 1); 
+                    cmd.Parameters.AddWithValue("@mail", "admin@admin.com");
+                    cmd.Parameters.AddWithValue("@fn", "Admin");
+                    cmd.Parameters.AddWithValue("@ln", "Admin");
+                    cmd.Parameters.AddWithValue("@tc", "11111111111");
+                    cmd.Parameters.AddWithValue("@ph", "5555555555");
+                    cmd.Parameters.AddWithValue("@bd", DateTime.Now.ToString("yyyy-MM-dd"));
+                });
+            }
+        }
     }
 }
