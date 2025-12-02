@@ -1,5 +1,6 @@
 namespace prgmlab3.Models
 {
+    // Uçuşlara ait rezervasyonlarını temsil eden model.
     public class ReservationModel : BaseModel
     {
         public const string StatusPending = "Pending";

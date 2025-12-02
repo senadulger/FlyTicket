@@ -3,6 +3,7 @@ using System.Collections.Generic;
 
 namespace prgmlab3.Models
 {
+    // Tüm modeller için ortak veritabanı işlemlerini sağlayan soyut temel sınıf.
     public abstract class BaseModel
     {
         public static List<Dictionary<string, object>> Query(string sql, Action<Microsoft.Data.Sqlite.SqliteCommand> binder)

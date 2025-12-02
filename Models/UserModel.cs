@@ -2,6 +2,7 @@ using System;
 
 namespace prgmlab3.Models
 {
+    // Sistemdeki kullanıcıların temel bilgilerini tutan soyut model.
     public abstract class UserModel : BaseModel
     {
         public const int RoleCustomer = 0;

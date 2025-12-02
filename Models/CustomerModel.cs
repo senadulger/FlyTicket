@@ -1,5 +1,6 @@
 namespace prgmlab3.Models
-{
+{    
+    // Sistemdeki normal kullanıcıları müşterileri temsil eden model.
     public class CustomerModel : UserModel
     {
         public CustomerModel(int id, string username, string mail)
