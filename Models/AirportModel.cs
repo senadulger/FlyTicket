@@ -81,13 +81,13 @@ namespace prgmlab3.Models
             // Daha sonra güncelleme özelliği getirilebilir.
         }
 
-                    // Id'ye göre havaalanı kaydını siler.
-            public static void Delete(int id)
-            {
-                SqliteDbHelper.ExecuteNonQuery(
-                    "DELETE FROM airports WHERE id=@id",
-                    cmd => cmd.Parameters.AddWithValue("@id", id)
-                );
-            }
+        // Id'ye göre havaalanı kaydını siler.
+        public static void Delete(int id)
+        {
+            SqliteDbHelper.ExecuteNonQuery(
+                "DELETE FROM airports WHERE id=@id",
+                cmd => cmd.Parameters.AddWithValue("@id", id)
+            );
+        }
     }
 }

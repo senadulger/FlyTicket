@@ -2,7 +2,7 @@ using System;
 
 namespace prgmlab3.Models
 {
-    
+    // Sistemdeki yönetici (admin) kullanıcıları temsil eden model.
     public class AdminModel : UserModel
     {
         public AdminModel(int id, string username, string mail)
@@ -12,8 +12,6 @@ namespace prgmlab3.Models
             _mail = mail;
             _role = 1; 
         }
-
-
 
         // Sisteme yeni uçak ekler.
         public void AddPlane(string name, int seatCount)
@@ -62,10 +60,6 @@ namespace prgmlab3.Models
                 cmd.Parameters.AddWithValue("@id", planeId);
             });
         }
-
-
-
-
 
         // Yeni uçuş ekler.
         public void AddFlight(
@@ -154,10 +148,6 @@ namespace prgmlab3.Models
                 cmd.Parameters.AddWithValue("@id", flightId);
             });
         }
-
-
-
-
 
         // Admin tarafından bir rezervasyonu iptal eder.
         public void CancelReservation(int reservationId)
