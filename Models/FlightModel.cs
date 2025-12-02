@@ -36,7 +36,7 @@ namespace prgmlab3.Models
         [Display(Name = "Baz Fiyat")]
         public double Price { get; set; }
 
-        #region CRUD
+
 
         public static List<FlightModel> GetAll()
         {
@@ -155,9 +155,8 @@ namespace prgmlab3.Models
             );
         }
 
-        #endregion
 
-        #region Dinamik Fiyatlandırma
+
 
         // Uçuşa kalan gün + doluluk + koltuk tipi + sezon
         // occupancyRatio : 0.0–1.0 arası doluluk oranı
@@ -233,9 +232,7 @@ namespace prgmlab3.Models
             return Math.Round(result, 2, MidpointRounding.AwayFromZero);
         }
 
-        #endregion
 
-        #region Arama
 
         public static List<Dictionary<string, object>> SearchFlights(string departureLocationName, string arrivalLocationName)
         {
@@ -260,6 +257,6 @@ namespace prgmlab3.Models
                 });
         }
 
-        #endregion
+
     }
 }

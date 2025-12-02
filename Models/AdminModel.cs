@@ -2,9 +2,7 @@ using System;
 
 namespace prgmlab3.Models
 {
-    // Sistemde yönetimsel işlemleri yapan kullanıcı modelidir.
-    // Kullanıcı hiyerarşisinde UserModel'den kalıtım alır.
-
+    
     public class AdminModel : UserModel
     {
         public AdminModel(int id, string username, string mail)
@@ -15,7 +13,7 @@ namespace prgmlab3.Models
             _role = 1; 
         }
 
-        #region Uçak İşlemleri
+
 
         // Sisteme yeni uçak ekler.
         public void AddPlane(string name, int seatCount)
@@ -65,9 +63,9 @@ namespace prgmlab3.Models
             });
         }
 
-        #endregion
 
-        #region Uçuş İşlemleri
+
+
 
         // Yeni uçuş ekler.
         public void AddFlight(
@@ -157,9 +155,9 @@ namespace prgmlab3.Models
             });
         }
 
-        #endregion
 
-        #region Rezervasyon İşlemleri (Admin Tarafı)
+
+
 
         // Admin tarafından bir rezervasyonu iptal eder.
         public void CancelReservation(int reservationId)
@@ -173,6 +171,6 @@ namespace prgmlab3.Models
             });
         }
 
-        #endregion
+
     }
 }
