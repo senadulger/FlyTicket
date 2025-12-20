@@ -17,7 +17,7 @@
                         <strong>Uçak:</strong> @planeName <br />
                         <strong>Kalkış:</strong> @airportMap?[flight.DepartureLocation] - @flight.DepartureTime.ToString("g") <br />
                         <strong>Varış:</strong> @airportMap?[flight.ArrivalLocation] - @flight.ArrivalTime.ToString("g") <br />
-                        <strong>Fiyat:</strong> @flight.Price ₺
+                        <strong>Fiyat:</strong> <span id="dynamic-price">@flight.Price</span> ₺
                     </p>
                 </div>
             </div>
@@ -31,6 +31,27 @@
         <div class="alert alert-danger">@TempData["Error"]</div>
     }
 
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Kupon Kodu</h5>
+                    <form method="get" asp-action="SelectSeat" class="d-flex">
+                        <input type="hidden" name="flightId" value="@flight.Id" />
+                        <input type="text" name="couponCode" value="@ViewBag.CouponCode" class="form-control me-2" placeholder="Kupon Kodu" />
+                        <button type="submit" class="btn btn-primary">Uygula</button>
+                    </form>
+                    @if (ViewBag.CouponMessage != null)
+                    {
+                        <div class="mt-2 text-@(ViewBag.IsCouponValid == true ? "success" : "danger")">
+                            @ViewBag.CouponMessage
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="row">
         @foreach (var seat in Model.OrderBy(s => s.SeatNumber))
         {
@@ -38,9 +59,12 @@
             var btnClass = isReserved ? "btn-secondary disabled" : "btn-outline-primary";
             var btnText = isReserved ? "Dolu" : "Seç";
             var seatClass = seat.Class == 1 ? "Business" : "Economy";
+            var seatPrice = (seat.Class == 1) ? ViewBag.PriceBusiness : ViewBag.PriceEconomy;
 
             <div class="col-md-2 col-sm-3 col-4 mb-3">
-                <div class="card text-center @(isReserved ? "bg-light" : "")">
+                <div class="card seat-card text-center @(isReserved ? "bg-light" : "")" 
+                     style="cursor: pointer;"
+                     onclick="selectSeat(this, '@seatPrice')">
                     <div class="card-body p-2">
                         <h5 class="card-title">@seat.SeatNumber</h5>
                         <p class="card-text small text-muted">@seatClass</p>
@@ -54,6 +78,7 @@
                                 @Html.AntiForgeryToken()
                                 <input type="hidden" name="flightId" value="@flight.Id" />
                                 <input type="hidden" name="seatId" value="@seat.Id" />
+                                <input type="hidden" name="couponCode" value="@ViewBag.CouponCode" />
                                 <button type="submit" class="btn btn-sm btn-success w-100" onclick="return confirm('@seat.SeatNumber numaralı koltuğu rezerve etmek istiyor musunuz?');">Seç</button>
                             </form>
                         }
@@ -62,4 +87,20 @@
             </div>
         }
     </div>
+
+    <script>
+        function selectSeat(element, price) {
+            var el = document.getElementById('dynamic-price');
+            if (el) {
+                el.innerText = price;
+            }
+
+            var allCards = document.querySelectorAll('.seat-card');
+            allCards.forEach(function(card) {
+                card.classList.remove('border-primary', 'border-3');
+            });
+
+            element.classList.add('border-primary', 'border-3');
+        }
+    </script>
 </div>

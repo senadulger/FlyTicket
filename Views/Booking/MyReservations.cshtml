@@ -72,7 +72,9 @@
                                 }
                                 else if (!isCancelled)
                                 {
-                                    <span class="text-muted ms-1" title="Geçmiş uçuşlar iptal edilemez">İptal Edilemez</span>
+                                    <span class="text-muted ms-1" title="@row.GetValueOrDefault("cancel_reason", "İptal Edilemez")">
+                                        @(row.ContainsKey("cancel_reason") && !string.IsNullOrEmpty(row["cancel_reason"] as string) ? row["cancel_reason"] : "İptal Edilemez")
+                                    </span>
                                 }
                                 else
                                 {

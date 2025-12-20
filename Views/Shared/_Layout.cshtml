@@ -8,7 +8,8 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - Uçak Bileti Rezervasyon Sistemi</title>
+    <title>@ViewData["Title"] - FlyTicket</title>
+    <link rel="icon" href="~/logo.png" type="image/png" />
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/prgmlab3.styles.css" asp-append-version="true" />
@@ -21,13 +22,15 @@
                 @if (isAdmin)
                 {
                     <a class="navbar-brand" asp-area="" asp-controller="Admin" asp-action="Index">
-                        Uçak Bileti Rezervasyon Sistemi
+                        <img src="~/logo.png" alt="Logo" width="30" height="30" class="d-inline-block align-text-top me-2">
+                        FlyTicket
                     </a>
                 }
                 else
                 {
                     <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">
-                        Uçak Bileti Rezervasyon Sistemi
+                        <img src="~/logo.png" alt="Logo" width="30" height="30" class="d-inline-block align-text-top me-2">
+                        FlyTicket
                     </a>
                 }
 
@@ -113,7 +116,7 @@
 
     <footer class="border-top footer text-muted">
         <div class="container">
-            &copy; 2025 - Uçak Bileti Rezervasyon Sistemi
+            &copy; 2025 - FlyTicket
         </div>
     </footer>
 

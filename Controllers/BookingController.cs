@@ -119,7 +119,7 @@ namespace prgmlab3.Controllers
         //  KOLTUK SEÇİMİ
         [HttpGet]
         [Authorize]
-        public IActionResult SelectSeat(int flightId)
+        public IActionResult SelectSeat(int flightId, string? couponCode = null)
         {
             var flight = FlightModel.GetById(flightId);
             if (flight == null)
@@ -138,12 +138,40 @@ namespace prgmlab3.Controllers
 
             int totalSeats = seats.Count == 0 ? 1 : seats.Count;
             double occupancy = (double)reservedSeatIds.Count / totalSeats;
-            flight.Price = flight.CalculateDynamicPrice(
-                seatClass: 0,
-                occupancyRatio: occupancy,
-                nowOverride: now
-            );
+            // 0=Economy, 1=Business
+            double priceEconomy = flight.CalculateDynamicPrice(0, occupancy, now);
+            double priceBusiness = flight.CalculateDynamicPrice(1, occupancy, now);
 
+            // Kupon kontrolü
+            CouponModel.EnsureTableExists(); 
+
+            if (!string.IsNullOrEmpty(couponCode))
+            {
+                var coupon = CouponModel.GetByCode(couponCode);
+                if (coupon != null && coupon.IsValid())
+                {
+                    double discountRate = coupon.DiscountPercent / 100.0;
+                    
+                    priceEconomy -= (priceEconomy * discountRate);
+                    priceBusiness -= (priceBusiness * discountRate);
+
+                    ViewBag.CouponCode = coupon.Code;
+                    ViewBag.IsCouponValid = true;
+                    ViewBag.CouponMessage = $"%{coupon.DiscountPercent} indirim uygulandı!";
+                }
+                else
+                {
+                    ViewBag.IsCouponValid = false;
+                    ViewBag.CouponMessage = "Geçersiz veya süresi dolmuş kupon kodu.";
+                }
+            }
+            priceEconomy = Math.Round(priceEconomy, 2);
+            priceBusiness = Math.Round(priceBusiness, 2);
+
+            flight.Price = priceEconomy; 
+            ViewBag.PriceEconomy = priceEconomy;
+            ViewBag.PriceBusiness = priceBusiness;
+            
             var planeRows = PlaneModel.Query(
                 "SELECT * FROM planes WHERE id=@id",
                 c => c.Parameters.AddWithValue("@id", flight.PlaneId)
@@ -175,7 +203,7 @@ namespace prgmlab3.Controllers
         [HttpPost]
         [Authorize]
         [ValidateAntiForgeryToken]
-        public IActionResult BookSeat(int flightId, int seatId)
+        public IActionResult BookSeat(int flightId, int seatId, string? couponCode = null)
         {
             var userIdStr = User.FindFirst("UserId")?.Value;
             if (!int.TryParse(userIdStr, out var userId))
@@ -221,6 +249,17 @@ namespace prgmlab3.Controllers
                 nowOverride: now
             );
 
+            // FİNAL İÇİN EKLENDİ: Kupon indirimi
+            if (!string.IsNullOrEmpty(couponCode))
+            {
+                 var coupon = CouponModel.GetByCode(couponCode);
+                 if (coupon != null && coupon.IsValid())
+                 {
+                     double discount = currentPrice * (coupon.DiscountPercent / 100.0);
+                     currentPrice -= discount;
+                 }
+            }
+
             var res = new ReservationModel(userId, flightId, (float)currentPrice, seatId);
             res.Save();
 
@@ -258,6 +297,7 @@ namespace prgmlab3.Controllers
                 string arrCity = "?";
                 bool canCancel = false;
                 bool canCheckIn = false;
+                string cancelReason = "";
 
                 if (flight != null)
                 {
@@ -266,8 +306,21 @@ namespace prgmlab3.Controllers
                     depCity = dep?.City ?? "?";
                     arrCity = arr?.City ?? "?";
 
-                    if (flight.DepartureTime > now)
+                    // FİNAL İÇİN EKLENDİ: Uçuşa 24 saatten az kaldıysa iptal edilemez.
+                    if ((flight.DepartureTime - now).TotalHours >= 24)
+                    {
                         canCancel = true;
+                    }
+                    else if (flight.DepartureTime > now)
+                    {
+                        // Gelecek uçuş ama 24 saatten az kalmış
+                        cancelReason = "Uçuşunuza 24 saatten az kaldığı için iptal edilemez.";
+                    }
+                    else
+                    {
+                        // Geçmiş uçuş
+                        cancelReason = "Geçmiş Uçuş";
+                    }
 
                     var status = r.Status ?? "Pending";
                     if (flight.DepartureTime > now &&
@@ -287,6 +340,7 @@ namespace prgmlab3.Controllers
                     { "price", r.Price },
                     { "status", r.Status ?? "Pending" },
                     { "can_cancel", canCancel },
+                    { "cancel_reason", cancelReason },
                     { "can_checkin", canCheckIn }
                 });
             }
@@ -360,9 +414,23 @@ namespace prgmlab3.Controllers
             var flight = FlightModel.GetById(flightId);
             var now = DateTime.Now;
 
-            if (flight == null || flight.DepartureTime <= now)
+            if (flight == null)
             {
-                TempData["Error"] = "Geçmiş uçuşlar iptal edilemez.";
+                 TempData["Error"] = "Uçuş bulunamadı.";
+                 return RedirectToAction(nameof(MyReservations));
+            }
+
+            // Geçmiş uçuş mu?
+            if (flight.DepartureTime <= now)
+            {
+                TempData["Error"] = "Geçmiş uçuş olduğu için iptal edilemez.";
+                return RedirectToAction(nameof(MyReservations));
+            }
+
+            // 24 saat kuralı
+            if ((flight.DepartureTime - now).TotalHours < 24)
+            {
+                TempData["Error"] = "Uçuşunuza 24 saatten az kaldığı için iptal edilemez.";
                 return RedirectToAction(nameof(MyReservations));
             }
 
