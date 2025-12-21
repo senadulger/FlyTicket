@@ -1,40 +1,51 @@
-@model prgmlab3.Models.PlaneModel
+@model prgmlab3.Models.PlaneModel 
 
 @{
+    // Sayfa başlığı
     ViewData["Title"] = "Uçak Ekle";
 }
 
 <div class="container mt-4">
     <h2>Uçak Ekle</h2>
 
+    <!-- Hata mesajı varsa göster -->
     @if (TempData["Error"] != null)
     {
         <div class="alert alert-danger">@TempData["Error"]</div>
     }
+
+    <!-- Başarı mesajı varsa göster -->
     @if (TempData["Success"] != null)
     {
         <div class="alert alert-success">@TempData["Success"]</div>
     }
 
+    <!-- Uçak ekleme formu: AdminController -> AddPlane (POST) -->
     <form asp-controller="Admin" asp-action="AddPlane" method="post">
+
         @Html.AntiForgeryToken()
 
-        @* Genel doğrulama hataları *@
+        <!-- Genel doğrulama hataları -->
         <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
+        <!-- Uçak adı alanı -->
         <div class="mb-3">
             <label asp-for="Name" class="form-label">Uçak Adı</label>
-            <input asp-for="Name" class="form-control" required />
-            <span asp-validation-for="Name" class="text-danger"></span>
+            <input asp-for="Name" class="form-control" required /> 
+            <span asp-validation-for="Name" class="text-danger"></span> 
         </div>
 
+        <!-- Koltuk sayısı alanı -->
         <div class="mb-3">
             <label asp-for="SeatCount" class="form-label">Koltuk Sayısı</label>
             <input asp-for="SeatCount" type="number" class="form-control" min="1" required />
-            <span asp-validation-for="SeatCount" class="text-danger"></span>
+            <span asp-validation-for="SeatCount" class="text-danger"></span> 
         </div>
 
+        <!-- Kaydet: Formu gönderir -->
         <button type="submit" class="btn btn-primary">Kaydet</button>
+
+        <!-- İptal: Uçak listesine geri döner -->
         <a class="btn btn-secondary ms-2" asp-controller="Admin" asp-action="Planes">İptal</a>
     </form>
 </div>

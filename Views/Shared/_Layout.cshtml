@@ -1,10 +1,14 @@
 ﻿@{
+    @* Kullanıcı giriş yaptı mı? *@
     var isAuthenticated = User?.Identity?.IsAuthenticated ?? false;
+
+    @* Giriş yapıldıysa admin rolünde mi? *@
     var isAdmin = isAuthenticated && User.IsInRole("Admin");
 }
 
 <!DOCTYPE html>
 <html lang="tr">
+
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -15,32 +19,43 @@
     <link rel="stylesheet" href="~/prgmlab3.styles.css" asp-append-version="true" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 </head>
+
 <body>
+
+    <!-- Üst menü (Navbar) -->
     <header>
         <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
             <div class="container-fluid">
+
+                @* Admin ise marka linki Admin paneline gider, değilse Anasayfa'ya gider *@
                 @if (isAdmin)
                 {
                     <a class="navbar-brand" asp-area="" asp-controller="Admin" asp-action="Index">
                         <img src="~/logo.png" alt="Logo" width="30" height="30" class="d-inline-block align-text-top me-2">
-                        FlyTicket
+                        <span class="brand-gradient" style="font-size: 1.5rem;">FlyTicket</span>
                     </a>
                 }
                 else
                 {
                     <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">
                         <img src="~/logo.png" alt="Logo" width="30" height="30" class="d-inline-block align-text-top me-2">
-                        FlyTicket
+                        <span class="brand-gradient" style="font-size: 1.5rem;">FlyTicket</span>
                     </a>
                 }
 
+                <!-- Mobilde menüyü aç/kapat butonu -->
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse"
-                        aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                    aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
                 </button>
 
+                <!-- Navbar içerikleri -->
                 <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
+
+                    <!-- Sol menü: Admin / Kullanıcı linkleri -->
                     <ul class="navbar-nav flex-grow-1">
+
+                        @* Admin menüsü *@
                         @if (isAdmin)
                         {
                             <li class="nav-item">
@@ -49,6 +64,7 @@
                                 </a>
                             </li>
                         }
+                        @* Giriş yapmış normal kullanıcı menüsü *@
                         else if (isAuthenticated)
                         {
                             <li class="nav-item">
@@ -56,31 +72,48 @@
                                     Anasayfa
                                 </a>
                             </li>
+
                             <li class="nav-item">
                                 <a class="nav-link text-dark" asp-controller="Booking" asp-action="Index">
                                     Uçuş Ara
                                 </a>
-                                </li>
+                            </li>
+
                             <li class="nav-item">
                                 <a class="nav-link text-dark" asp-controller="Booking" asp-action="MyReservations">
                                     Rezervasyonlarım
                                 </a>
                             </li>
-
                         }
                     </ul>
 
-                    <ul class="navbar-nav">
+                    <!-- Sağ menü: Kullanıcı dropdown / Giriş-Kayıt -->
+                    <ul class="navbar-nav align-items-center">
+
+                        @* Giriş yapılmışsa kullanıcı menüsü *@
                         @if (isAuthenticated)
                         {
                             <li class="nav-item dropdown">
-                                <a class="nav-link dropdown-toggle text-dark" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <!-- Kullanıcı adı dropdown -->
+                                <a class="nav-link dropdown-toggle text-dark" href="#" id="navbarDropdown" role="button"
+                                    data-bs-toggle="dropdown" aria-expanded="false">
                                     Merhaba, @User.Identity!.Name
                                 </a>
+
+                                <!-- Dropdown içeriği -->
                                 <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
-                                    <li><a class="dropdown-item" asp-controller="Account" asp-action="Profile">Profil Bilgilerim</a></li>
-                                    <li><hr class="dropdown-divider"></li>
                                     <li>
+                                        <a class="dropdown-item" asp-controller="Account" asp-action="Profile">
+                                            Profil Bilgilerim
+                                        </a>
+                                    </li>
+
+                                    <li>
+                                        <hr class="dropdown-divider">
+                                    </li>
+
+                                    <li>
+                                        <!-- Çıkış işlemi POST ile yapılır -->
                                         <form asp-controller="Account" asp-action="Logout" method="post" class="d-inline">
                                             @Html.AntiForgeryToken()
                                             <button type="submit" class="dropdown-item">Çıkış Yap</button>
@@ -91,39 +124,46 @@
                         }
                         else
                         {
-                            <li class="nav-item">
-                                <a class="nav-link text-dark" asp-controller="Account" asp-action="Login">
+                            @* Giriş yapılmamışsa -> Giriş Yap ve Kayıt Ol *@
+                            <li class="nav-item me-3">
+                                <a class="nav-link text-dark fw-medium" asp-controller="Account" asp-action="Login">
                                     Giriş Yap
                                 </a>
                             </li>
+
                             <li class="nav-item">
-                                <a class="nav-link text-dark" asp-controller="Account" asp-action="Register">
+                                <a class="btn btn-primary rounded-pill px-4 fw-medium" asp-controller="Account"
+                                    asp-action="Register">
                                     Kayıt Ol
                                 </a>
                             </li>
                         }
                     </ul>
+
                 </div>
             </div>
         </nav>
     </header>
 
+    <!-- Sayfa gövdesi -->
     <div class="container">
         <main role="main" class="pb-3">
-            @RenderBody()
+            @RenderBody() @* Her sayfanın kendi içeriği *@
         </main>
     </div>
 
+    <!-- Footer -->
     <footer class="border-top footer text-muted">
         <div class="container">
             &copy; 2025 - FlyTicket
         </div>
     </footer>
 
+    <!-- JS dosyaları -->
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
-</html>
 
+</html>

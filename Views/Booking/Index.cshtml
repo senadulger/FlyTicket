@@ -1,73 +1,154 @@
 @model List<prgmlab3.Models.FlightModel>
+
 @{
+    // Sayfa başlığı
     ViewData["Title"] = "Uçuş Ara";
+
+    // Havaalanı ID -> Metin
     var airportMap = ViewBag.AirportMap as Dictionary<int, string>;
 }
 
-<div class="container mt-4">
-    <h2 class="mb-4">Uçuş Ara</h2>
-    
-    <div class="card mb-4">
-        <div class="card-body">
-            <form method="get" asp-action="Index" class="row g-3">
-                <div class="col-md-3">
-                    <label for="from" class="form-label">Nereden</label>
-                    <input type="text" class="form-control" name="from" placeholder="Şehir veya Havaalanı" value="@Context.Request.Query["from"]">
+<div class="container mt-5">
+
+    <!-- Sayfa başlığı -->
+    <h1 class="flight-user-title display-5">Uçuş Ara</h1>
+
+    <!-- Arama / filtreleme alanı -->
+    <div class="flight-search-container">
+
+        <!-- GET form: arama parametreleri querystring olarak gönderilir -->
+        <form method="get" asp-action="Index" class="row g-4">
+
+            <!-- Nereden -->
+            <div class="col-md-3">
+                <label for="from" class="form-label fw-bold small text-muted">Nereden</label>
+                <div class="input-group-custom">
+                    <!-- İkon -->
+                    <i class="bi bi-airplane-fill text-muted fs-5" style="transform: rotate(45deg);"></i>
+
+                    <!-- from parametresi: önceki arama değerini query'den geri basar -->
+                    <input type="text" class="form-control form-control-lg border-0 bg-light ps-5" name="from"
+                        placeholder="Şehir veya Havaalanı" value="@Context.Request.Query["from"]">
                 </div>
-                <div class="col-md-3">
-                    <label for="to" class="form-label">Nereye</label>
-                    <input type="text" class="form-control" name="to" placeholder="Şehir veya Havaalanı" value="@Context.Request.Query["to"]">
+            </div>
+
+            <!-- Nereye -->
+            <div class="col-md-3">
+                <label for="to" class="form-label fw-bold small text-muted">Nereye</label>
+                <div class="input-group-custom">
+                    <!-- İkon -->
+                    <i class="bi bi-airplane-fill text-muted fs-5" style="transform: rotate(135deg);"></i>
+
+                    <!-- to parametresi -->
+                    <input type="text" class="form-control form-control-lg border-0 bg-light ps-5" name="to"
+                        placeholder="Şehir veya Havaalanı" value="@Context.Request.Query["to"]">
                 </div>
-                <div class="col-md-2">
-                    <label for="startDate" class="form-label">Başlangıç Tarihi</label>
-                    <input type="date" class="form-control" name="startDate" value="@Context.Request.Query["startDate"]">
-                </div>
-                <div class="col-md-2">
-                    <label for="endDate" class="form-label">Bitiş Tarihi</label>
-                    <input type="date" class="form-control" name="endDate" value="@Context.Request.Query["endDate"]">
-                </div>
-                <div class="col-md-2 d-flex align-items-end">
-                    <button type="submit" class="btn btn-primary w-100">Ara</button>
-                </div>
-            </form>
-        </div>
+            </div>
+
+            <!-- Gidiş tarihi -->
+            <div class="col-md-2">
+                <label for="startDate" class="form-label fw-bold small text-muted">Gidiş Tarihi</label>
+                <input type="date" class="form-control form-control-lg border-0 bg-light" name="startDate"
+                    value="@Context.Request.Query["startDate"]">
+            </div>
+
+            <!-- Dönüş tarihi -->
+            <div class="col-md-2">
+                <label for="endDate" class="form-label fw-bold small text-muted">Dönüş Tarihi</label>
+                <input type="date" class="form-control form-control-lg border-0 bg-light" name="endDate"
+                    value="@Context.Request.Query["endDate"]">
+            </div>
+
+            <!-- Arama butonu -->
+            <div class="col-md-2 d-flex align-items-end">
+                <button type="submit" class="search-btn-large">
+                    <span class="fw-bold">Ara</span>
+                </button>
+            </div>
+
+        </form>
     </div>
 
+    <!-- Sonuç yoksa bilgilendirme -->
     @if (Model.Count == 0)
     {
-        <div class="alert alert-info">Aradığınız kriterlere uygun uçuş bulunamadı.</div>
+        <div class="alert alert-info rounded-3 border-0 p-4 shadow-sm">
+            <i class="bi bi-info-circle me-2"></i>
+            Aradığınız kriterlere uygun uçuş bulunamadı. Lütfen filtrelerinizi kontrol edin.
+        </div>
     }
     else
     {
-        <div class="row">
-            @foreach (var flight in Model)
-            {
-                <div class="col-md-12 mb-3">
-                    <div class="card">
-                        <div class="card-body">
-                            <div class="row align-items-center">
-                                <div class="col-md-3">
-                                    <h5 class="card-title">@airportMap?[flight.DepartureLocation]</h5>
-                                    <p class="card-text text-muted">@flight.DepartureTime.ToString("g")</p>
+        <!-- Sonuçlar: her uçuş için kart oluştur -->
+        @foreach (var flight in Model)
+        {
+            <div class="flight-card">
+                <div class="row align-items-center">
+
+                    <!-- Rota ve zaman bilgileri -->
+                    <div class="col-md-8">
+                        <div class="row align-items-center">
+
+                            <!-- Kalkış bilgileri -->
+                            <div class="col-md-4">
+                                <div class="flight-time">@flight.DepartureTime.ToString("HH:mm")</div>
+
+                                @* airportMap'ten şehir ismi çekilir: "Şehir (Kod)" -> "Şehir" *@
+                                <div class="flight-city">
+                                    @airportMap?[flight.DepartureLocation].Split('(')[0].Trim()
                                 </div>
-                                <div class="col-md-1 text-center">
-                                    <i class="bi bi-arrow-right"></i>
-                                </div>
-                                <div class="col-md-3">
-                                    <h5 class="card-title">@airportMap?[flight.ArrivalLocation]</h5>
-                                    <p class="card-text text-muted">@flight.ArrivalTime.ToString("g")</p>
-                                </div>
-                                <div class="col-md-2 text-center">
-                                    <h4 class="text-primary">@flight.Price.ToString("F2") ₺</h4>
-                                </div>
-                                <div class="col-md-3 text-end">
-                                    <a asp-action="SelectSeat" asp-route-flightId="@flight.Id" class="btn btn-success">Koltuk Seç</a>
+
+                                <!-- Tam havaalanı adı/kodu -->
+                                <div class="flight-airport">@airportMap?[flight.DepartureLocation]</div>
+
+                                <!-- Kalkış tarihi -->
+                                <div class="flight-date">@flight.DepartureTime.ToString("dd.MM.yyyy")</div>
+                            </div>
+
+                            <!-- Aradaki çizgi  -->
+                            <div class="col-md-4">
+                                <div class="flight-duration-container">
+                                    <div class="flight-line">
+                                    </div>
                                 </div>
                             </div>
+
+                            <!-- Varış bilgileri -->
+                            <div class="col-md-4 text-end">
+                                <div class="flight-time">@flight.ArrivalTime.ToString("HH:mm")</div>
+
+                                @* airportMap'ten şehir ismi çekilir *@
+                                <div class="flight-city">
+                                    @airportMap?[flight.ArrivalLocation].Split('(')[0].Trim()
+                                </div>
+
+                                <!-- Tam havaalanı adı/kodu -->
+                                <div class="flight-airport">@airportMap?[flight.ArrivalLocation]</div>
+
+                                <!-- Varış tarihi -->
+                                <div class="flight-date">@flight.ArrivalTime.ToString("dd.MM.yyyy")</div>
+                            </div>
+
                         </div>
                     </div>
+
+                    <!-- Fiyat -->
+                    <div class="col-md-4">
+                        <div class="flight-price-container">
+
+                            <!-- Uçuş fiyatı -->
+                            <div class="flight-price">@flight.Price.ToString("F2") ₺</div>
+
+                            <!-- Koltuk seçimi sayfasına yönlendirir -->
+                            <a asp-action="SelectSeat" asp-route-flightId="@flight.Id" class="btn-select-seat">
+                                Koltuk Seç
+                            </a>
+
+                        </div>
+                    </div>
+
                 </div>
-            }
-        </div>
+            </div>
+        }
     }
 </div>

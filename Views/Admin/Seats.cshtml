@@ -1,16 +1,21 @@
 @model List<Dictionary<string, object>>
 
 @{
+    // Sayfa başlığı
     ViewData["Title"] = "Koltuklar";
+
+    // Filtrelenmiş uçak adı
     string planeName = ViewBag.FilterPlaneName as string;
 }
 
 <div class="container mt-4">
+
+    <!-- Sayfa başlığı ve filtreli uçak adı -->
     <h2>
         Koltuklar
         @if (!string.IsNullOrEmpty(planeName))
         {
-            <span class="text-muted">- @planeName</span>
+            <span class="text-muted">- @planeName</span> @* Hangi uçağın koltukları görüntüleniyor *@
         }
     </h2>
 
@@ -28,22 +33,29 @@
     @if (ViewBag.FilterPlaneId != null)
     {
         <div class="mb-3">
+
+            <!-- Koltuk ekleme formu: AdminController -> AddSeat (POST) -->
             <form asp-controller="Admin" asp-action="AddSeat" method="post" class="row g-2">
+
                 @Html.AntiForgeryToken()
+
+                <!-- Koltuğun ekleneceği uçak ID'si -->
                 <input type="hidden" name="planeId" value="@(ViewBag.FilterPlaneId)" />
+
+                <!-- Koltuk numarası girişi -->
                 <div class="col-md-4 col-lg-3">
-                    <input type="text"
-                           class="form-control"
-                           name="seatNumber"
-                           placeholder="Koltuk No"
-                           required />
+                    <input type="text" class="form-control" name="seatNumber" placeholder="Koltuk No" required />
                 </div>
+
+                <!-- Koltuk sınıfı seçimi (0: Ekonomi, 1: Business) -->
                 <div class="col-md-3 col-lg-2">
                     <select class="form-select" name="seatClass">
                         <option value="0">Ekonomi</option>
                         <option value="1">Business</option>
                     </select>
                 </div>
+
+                <!-- Formu gönderme butonu -->
                 <div class="col-md-3 col-lg-2">
                     <button type="submit" class="btn btn-primary">Koltuk Ekle</button>
                 </div>
@@ -51,6 +63,7 @@
         </div>
     }
 
+    <!-- Model boşsa bilgilendirme -->
     @if (Model == null || Model.Count == 0)
     {
         <div class="alert alert-info mt-3">
@@ -59,50 +72,69 @@
     }
     else
     {
-        <table class="table table-bordered table-hover mt-3">
-            <thead class="table-dark">
-                <tr>
-                    <th>ID</th>
-                    <th>Koltuk No</th>
-                    <th>Sınıf</th>
-                    <th>Uçak</th>
-                    <th style="width:120px;">İşlemler</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var row in Model)
-                {
-                    var cls = Convert.ToInt32(row["class"]);
-                    var classText = cls == 1 ? "Business" : "Ekonomi";
-                    var badgeClass = cls == 1 ? "bg-info" : "bg-danger";
+        <div class="table-responsive">
 
+            <!-- Koltuk listesi tablosu -->
+            <table class="table table-custom mb-0">
+
+                <!-- Tablo başlıkları -->
+                <thead>
                     <tr>
-                        <td>@row["id"]</td>
-                        <td>@row["seat_number"]</td>
-                        <td>
-                            <span class="badge @badgeClass">@classText</span>
-                        </td>
-                        <td>@row["plane_name"]</td>
-                        <td>
-                            <form asp-controller="Admin"
-                                  asp-action="DeleteSeat"
-                                  method="post"
-                                  style="display:inline">
-                                @Html.AntiForgeryToken()
-                                <input type="hidden" name="id" value="@(row["id"])" />
-                                <input type="hidden"
-                                       name="planeId"
-                                       value="@(ViewBag.FilterPlaneId ?? Convert.ToInt32(row["plane_id"]))" />
-                                <button type="submit"
-                                        class="btn btn-sm btn-danger"
-                                        onclick="return confirm('Bu koltuğu silmek istiyor musunuz?');">
-                                    Sil
-                                </button>
-                            </form>
-                        </td>
+                        <th>ID</th>
+                        <th>Koltuk No</th>
+                        <th>Sınıf</th>
+                        <th>Uçak</th>
+                        <th style="width:120px;">İşlemler</th>
                     </tr>
-                }
-            </tbody>
-        </table>
+                </thead>
+
+                <!-- Tablo içerik alanı -->
+                <tbody>
+                    @foreach (var row in Model)
+                    {
+                        @* class alanı numeric geldiği için int'e çevrilir *@
+                        var cls = Convert.ToInt32(row["class"]);
+
+                        @* class değerine göre metin ve badge rengi belirlenir *@
+                        var classText = cls == 1 ? "Business" : "Ekonomi";
+                        var badgeClass = cls == 1 ? "bg-danger" : "bg-info";
+
+                        <tr>
+                            <td>@row["id"]</td>
+                            <td class="fw-bold">@row["seat_number"]</td>
+
+                            <!-- Koltuk sınıfı badge ile gösterilir -->
+                            <td>
+                                <span class="badge @badgeClass">@classText</span>
+                            </td>
+
+                            <!-- Uçağın adı -->
+                            <td>@row["plane_name"]</td>
+
+                            <!-- Silme işlemi -->
+                            <td>
+                                <form asp-controller="Admin" asp-action="DeleteSeat" method="post" style="display:inline">
+
+                                    @Html.AntiForgeryToken()
+
+                                    <!-- Silinecek koltuğun ID'si -->
+                                    <input type="hidden" name="id" value="@(row["id"])" />
+
+                                    <!-- Silme sonrası aynı uçak filtresine geri dönmek için planeId gönderilir -->
+                                    <input type="hidden" name="planeId"
+                                        value="@(ViewBag.FilterPlaneId ?? Convert.ToInt32(row["plane_id"]))" />
+
+                                    <!-- Sil butonu -->
+                                    <button type="submit" class="btn-action-delete"
+                                        onclick="return confirm('Bu koltuğu silmek istiyor musunuz?');">
+                                        Sil
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
     }
 </div>

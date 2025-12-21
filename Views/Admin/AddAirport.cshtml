@@ -1,52 +1,68 @@
 @model prgmlab3.Models.AirportModel
 
 @{
+    // Sayfa başlığı
     ViewData["Title"] = "Havaalanı Ekle";
 }
 
 <div class="container mt-4">
     <h2>Havaalanı Ekle</h2>
 
+    <!-- Hata mesajı varsa göster -->
     @if (TempData["Error"] != null)
     {
-        <div class="alert alert-danger">@TempData["Error"]</div>
+        <div class="alert alert-danger">
+            @TempData["Error"]
+        </div>
     }
+
+    <!-- Başarı mesajı varsa göster -->
     @if (TempData["Success"] != null)
     {
-        <div class="alert alert-success">@TempData["Success"]</div>
+        <div class="alert alert-success">
+            @TempData["Success"]
+        </div>
     }
 
+    <!-- Havaalanı ekleme formu: AdminController -> AddAirport (POST) -->
     <form asp-controller="Admin" asp-action="AddAirport" method="post">
-        @Html.AntiForgeryToken()
 
-        @* Genel doğrulama hataları *@
+        @Html.AntiForgeryToken()
+        <!-- Genel doğrulama hataları -->
         <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
+        <!-- Havaalanı Kodu -->
         <div class="mb-3">
             <label asp-for="Code" class="form-label"></label>
             <input asp-for="Code" class="form-control" />
             <span asp-validation-for="Code" class="text-danger"></span>
         </div>
 
+        <!-- Şehir -->
         <div class="mb-3">
             <label asp-for="City" class="form-label"></label>
             <input asp-for="City" class="form-control" required />
             <span asp-validation-for="City" class="text-danger"></span>
         </div>
 
+        <!-- Havaalanı Adı -->
         <div class="mb-3">
             <label asp-for="Name" class="form-label"></label>
             <input asp-for="Name" class="form-control" required />
             <span asp-validation-for="Name" class="text-danger"></span>
         </div>
 
+        <!-- Ülke -->
         <div class="mb-3">
             <label asp-for="Country" class="form-label"></label>
             <input asp-for="Country" class="form-control" />
             <span asp-validation-for="Country" class="text-danger"></span>
         </div>
 
+        <!-- Kaydet: Formu submit eder -->
         <button type="submit" class="btn btn-primary">Kaydet</button>
-        <a class="btn btn-secondary ms-2" asp-controller="Admin" asp-action="Airports">İptal</a>
+
+        <!-- İptal: Havaalanları listesine geri döner -->
+        <a class="btn btn-danger ms-2" asp-controller="Admin" asp-action="Airports">İptal</a>
     </form>
 </div>

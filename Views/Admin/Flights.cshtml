@@ -1,133 +1,171 @@
 @model List<Dictionary<string, object>>
 
 @{
+    // Sayfa başlığı
     ViewData["Title"] = "Uçuşlar";
 }
 
 <div class="container mt-4">
     <h2>Uçuşlar</h2>
 
+    <!-- Başarılı işlem mesajı -->
     @if (TempData["Success"] != null)
     {
         <div class="alert alert-success mt-3">@TempData["Success"]</div>
     }
+
+    <!-- Hata mesajı -->
     @if (TempData["Error"] != null)
     {
         <div class="alert alert-danger mt-3">@TempData["Error"]</div>
     }
 
+    <!-- Yeni uçuş ekleme butonu -->
     <div class="mb-3">
-        <a class="btn btn-primary" asp-controller="Admin" asp-action="AddFlight">Uçuş Ekle</a>
+        <a class="btn btn-primary"
+           asp-controller="Admin"
+           asp-action="AddFlight">
+            Uçuş Ekle
+        </a>
     </div>
 
+    <!-- Model boşsa bilgilendirme -->
     @if (Model == null || Model.Count == 0)
     {
         <div class="alert alert-info">Kayıtlı uçuş bulunmamaktadır.</div>
     }
     else
     {
-        <table class="table table-bordered table-hover mt-3">
-            <thead class="table-dark">
-                <tr>
-                    <th>ID</th>
-                    <th>Uçak</th>
-                    <th>Kalkış</th>
-                    <th>Varış</th>
-                    <th>Kalkış Zamanı</th>
-                    <th>Varış Zamanı</th>
-                    <th>Baz Fiyat</th>
-                    <th style="width:190px;">İşlemler</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var row in Model)
-                {
+        <div class="table-responsive">
+
+            <!-- Uçuş listesi tablosu -->
+            <table class="table table-custom mb-0">
+
+                <!-- Tablo başlıkları -->
+                <thead>
                     <tr>
-                        <td>@row["id"]</td>
-                        <td>@row["plane_name"]</td>
-                        <td>@row["departure_city"]</td>
-                        <td>@row["arrival_city"]</td>
-
-                        <td>
-                            @{
-                                DateTime? depDt = null;
-                                var depObj = row["departure_time"];
-                                if (depObj != null)
-                                {
-                                    if (depObj is DateTime dtDep)
-                                        depDt = dtDep;
-                                    else if (DateTime.TryParse(Convert.ToString(depObj), out var dtmp))
-                                        depDt = dtmp;
-                                }
-
-                                var depIso = depDt.HasValue
-                                    ? depDt.Value.ToString("yyyy-MM-ddTHH:mm")
-                                    : "";
-                            }
-                            <input type="datetime-local"
-                                   class="form-control form-control-sm"
-                                   name="departureTime"
-                                   form="edit-@row["id"]"
-                                   value="@depIso" />
-                        </td>
-
-                        <td>
-                            @{
-                                DateTime? arrDt = null;
-                                var arrObj = row["arrival_time"];
-                                if (arrObj != null)
-                                {
-                                    if (arrObj is DateTime dtArr)
-                                        arrDt = dtArr;
-                                    else if (DateTime.TryParse(Convert.ToString(arrObj), out var atmp))
-                                        arrDt = atmp;
-                                }
-
-                                var arrIso = arrDt.HasValue
-                                    ? arrDt.Value.ToString("yyyy-MM-ddTHH:mm")
-                                    : "";
-                            }
-                            <input type="datetime-local"
-                                   class="form-control form-control-sm"
-                                   name="arrivalTime"
-                                   form="edit-@row["id"]"
-                                   value="@arrIso" />
-                        </td>
-
-                        <td>@row["price"]</td>
-
-                        <td>
-                            @* SAAT GÜNCELLE *@
-                            <form id="edit-@row["id"]"
-                                  asp-controller="Admin"
-                                  asp-action="EditFlight"
-                                  method="post"
-                                  style="display:inline">
-                                @Html.AntiForgeryToken()
-                                <input type="hidden" name="id" value="@(row["id"])" />
-                                <button type="submit"
-                                        class="btn btn-sm btn-info me-1">
-                                    Güncelle
-                                </button>
-                            </form>
-
-                            @* UÇUŞ SİL *@
-                            <form asp-controller="Admin"
-                                  asp-action="DeleteFlight"
-                                  method="post"
-                                  style="display:inline">
-                                @Html.AntiForgeryToken()
-                                <input type="hidden" name="id" value="@(row["id"])" />
-                                <button type="submit"
-                                        class="btn btn-sm btn-danger"
-                                        onclick="return confirm('Bu uçuşu silmek istiyor musunuz?');">
-                                    Sil
-                                </button>
-                            </form>
-                        </td>
+                        <th>ID</th>
+                        <th>Uçak</th>
+                        <th>Kalkış</th>
+                        <th>Varış</th>
+                        <th>Kalkış Zamanı</th>
+                        <th>Varış Zamanı</th>
+                        <th>Baz Fiyat</th>
+                        <th style="width:170px;">İşlemler</th>
                     </tr>
-                }
-            </tbody>
-        </table>
+                </thead>
+
+                <!-- Tablo içerik kısmı -->
+                <tbody>
+                    @foreach (var row in Model)
+                    {
+                        <tr>
+                            <!-- Temel uçuş bilgileri -->
+                            <td>@row["id"]</td>
+                            <td class="fw-medium">@row["plane_name"]</td>
+                            <td>@row["departure_city"]</td>
+                            <td>@row["arrival_city"]</td>
+
+                            <!-- Kalkış zamanı -->
+                            <td>
+                                @{
+                                    DateTime? depDt = null;
+                                    var depObj = row["departure_time"];
+
+                                    if (depObj != null)
+                                    {
+                                        if (depObj is DateTime dtDep)
+                                            depDt = dtDep;
+                                        else if (DateTime.TryParse(Convert.ToString(depObj), out var dtmp))
+                                            depDt = dtmp;
+                                    }
+
+                                    var depIso = depDt.HasValue
+                                        ? depDt.Value.ToString("yyyy-MM-ddTHH:mm")
+                                        : "";
+                                }
+
+                                <input type="datetime-local"
+                                       class="form-control form-control-sm"
+                                       name="departureTime"
+                                       form="edit-@row["id"]"
+                                       value="@depIso" />
+                            </td>
+
+                            <!-- Varış zamanı -->
+                            <td>
+                                @{
+                                    DateTime? arrDt = null;
+                                    var arrObj = row["arrival_time"];
+
+                                    if (arrObj != null)
+                                    {
+                                        if (arrObj is DateTime dtArr)
+                                            arrDt = dtArr;
+                                        else if (DateTime.TryParse(Convert.ToString(arrObj), out var atmp))
+                                            arrDt = atmp;
+                                    }
+
+                                    var arrIso = arrDt.HasValue
+                                        ? arrDt.Value.ToString("yyyy-MM-ddTHH:mm")
+                                        : "";
+                                }
+
+                                <input type="datetime-local"
+                                       class="form-control form-control-sm"
+                                       name="arrivalTime"
+                                       form="edit-@row["id"]"
+                                       value="@arrIso" />
+                            </td>
+
+                            <!-- Uçuş fiyatı -->
+                            <td class="fw-bold">@row["price"] ₺</td>
+
+                            <!-- İşlemler: Güncelleme ve Silme -->
+                            <td>
+
+                                @* UÇUŞ SAATLERİNİ GÜNCELLE *@
+                                <form id="edit-@row["id"]"
+                                      asp-controller="Admin"
+                                      asp-action="EditFlight"
+                                      method="post"
+                                      style="display:inline">
+
+                                    @Html.AntiForgeryToken()
+
+                                    <!-- Güncellenecek uçuş ID -->
+                                    <input type="hidden" name="id" value="@(row["id"])" />
+
+                                    <!-- Güncelle butonu -->
+                                    <button type="submit" class="btn-action-edit me-1">
+                                        Güncelle
+                                    </button>
+                                </form>
+
+                                @* UÇUŞU SİL *@
+                                <form asp-controller="Admin"
+                                      asp-action="DeleteFlight"
+                                      method="post"
+                                      style="display:inline">
+
+                                    @Html.AntiForgeryToken()
+
+                                    <!-- Silinecek uçuş ID -->
+                                    <input type="hidden" name="id" value="@(row["id"])" />
+
+                                    <!-- Sil butonu -->
+                                    <button type="submit"
+                                            class="btn-action-delete"
+                                            onclick="return confirm('Bu uçuşu silmek istiyor musunuz?');">
+                                        Sil
+                                    </button>
+                                </form>
+
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
     }
 </div>

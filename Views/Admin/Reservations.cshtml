@@ -1,13 +1,14 @@
 @model List<Dictionary<string, object>>
 
 @{
+    // Sayfa başlığı
     ViewData["Title"] = "Rezervasyonlar";
 }
 
 <div class="container mt-4">
     <h2>Rezervasyonlar</h2>
 
-    @* TempData mesajları *@
+    @* TempData mesajları (başarı/bilgi/hata) *@
     @if (TempData["Success"] != null)
     {
         <div class="alert alert-success mt-3">@TempData["Success"]</div>
@@ -21,6 +22,7 @@
         <div class="alert alert-danger mt-3">@TempData["Error"]</div>
     }
 
+    <!-- Model boşsa bilgilendirme -->
     @if (Model == null || Model.Count == 0)
     {
         <div class="alert alert-info mt-3">
@@ -29,81 +31,100 @@
     }
     else
     {
-        <table class="table table-bordered table-hover mt-3">
-            <thead class="table-dark">
-                <tr>
-                    <th>ID</th>
-                    <th>Kullanıcı</th>
-                    <th>Uçuş</th>
-                    <th>Koltuk</th>
-                    <th>Fiyat</th>
-                    <th>Durum</th>
-                    <th style="width:140px;">İşlemler</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var row in Model)
-                {
-                    var status = (row["status"] as string) ?? "Pending";
-                    
-                    string priceText;
-                    try
-                    {
-                        var priceObj = row["price"];
-                        if (priceObj is decimal dec)
-                            priceText = dec.ToString("0.00");
-                        else if (priceObj is double d)
-                            priceText = d.ToString("0.00");
-                        else if (priceObj is float f)
-                            priceText = f.ToString("0.00");
-                        else if (decimal.TryParse(Convert.ToString(priceObj), out var parsed))
-                            priceText = parsed.ToString("0.00");
-                        else
-                            priceText = Convert.ToString(priceObj);
-                    }
-                    catch
-                    {
-                        priceText = Convert.ToString(row["price"]);
-                    }
+        <div class="table-responsive">
 
-                    string badgeClass =
+            <!-- Rezervasyon listesi tablosu -->
+            <table class="table table-custom mb-0">
+
+                <!-- Tablo başlıkları -->
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Kullanıcı</th>
+                        <th>Uçuş</th>
+                        <th>Koltuk</th>
+                        <th>Fiyat</th>
+                        <th>Durum</th>
+                        <th style="width:140px;">İşlemler</th>
+                    </tr>
+                </thead>
+
+                <!-- Tablo içerik alanı -->
+                <tbody>
+                    @foreach (var row in Model)
+                    {
+                        @* Durum alanı yoksa varsayılan olarak Pending kabul edilir *@
+                        var status = (row["status"] as string) ?? "Pending";
+
+                        @* Fiyat farklı tiplerde gelebileceği için güvenli biçimde 0.00 formatına çevrilir *@
+                        string priceText;
+                        try
+                        {
+                            var priceObj = row["price"];
+                            if (priceObj is decimal dec)
+                                priceText = dec.ToString("0.00");
+                            else if (priceObj is double d)
+                                priceText = d.ToString("0.00");
+                            else if (priceObj is float f)
+                                priceText = f.ToString("0.00");
+                            else if (decimal.TryParse(Convert.ToString(priceObj), out var parsed))
+                                priceText = parsed.ToString("0.00");
+                            else
+                                priceText = Convert.ToString(priceObj);
+                        }
+                        catch
+                        {
+                            priceText = Convert.ToString(row["price"]);
+                        }
+
+                        @* Duruma göre badge rengi belirlenir *@
+                        string badgeClass =
                         string.Equals(status, "Cancelled", StringComparison.OrdinalIgnoreCase) ? "bg-danger" :
                         string.Equals(status, "Confirmed", StringComparison.OrdinalIgnoreCase) ? "bg-success" :
                         "bg-warning";
 
-                    <tr>
-                        <td>@row["id"]</td>
-                        <td>@row["username"]</td>
-                        <td>@row["flight_id"]</td>
-                        <td>@row["seat_number"]</td>
-                        <td>@priceText</td>
-                        <td>
-                            <span class="badge @badgeClass">@status</span>
-                        </td>
-                        <td>
-                            @if (!string.Equals(status, "Cancelled", StringComparison.OrdinalIgnoreCase))
-                            {
-                                <form asp-controller="Admin"
-                                      asp-action="CancelReservation"
-                                      method="post"
-                                      style="display:inline">
-                                    @Html.AntiForgeryToken()
-                                    <input type="hidden" name="id" value="@(row["id"])" />
-                                    <button type="submit"
-                                            class="btn btn-sm btn-danger"
+                        <tr>
+                            <!-- Rezervasyon bilgileri -->
+                            <td>@row["id"]</td>
+                            <td class="fw-medium">@row["username"]</td>
+                            <td>@row["flight_id"]</td>
+                            <td>@row["seat_number"]</td>
+                            <td class="fw-bold">@priceText ₺</td>
+
+                            <!-- Durum badge -->
+                            <td>
+                                <span class="badge @badgeClass">@status</span>
+                            </td>
+
+                            <!-- İşlemler: İptal Et / İptal Edildi -->
+                            <td>
+                                @* Rezervasyon iptal edilmemişse iptal etme butonu göster *@
+                                @if (!string.Equals(status, "Cancelled", StringComparison.OrdinalIgnoreCase))
+                                {
+                                    <form asp-controller="Admin" asp-action="CancelReservation" method="post"
+                                        style="display:inline">
+                                        @Html.AntiForgeryToken()
+
+                                        <!-- İptal edilecek rezervasyonun ID'si -->
+                                        <input type="hidden" name="id" value="@(row["id"])" />
+
+                                        <!-- İptal butonu -->
+                                        <button type="submit" class="btn-action-delete"
                                             onclick="return confirm('Bu rezervasyonu iptal etmek istiyor musunuz?');">
-                                        İptal Et
-                                    </button>
-                                </form>
-                            }
-                            else
-                            {
-                                <span class="text-muted">İptal Edildi</span>
-                            }
-                        </td>
-                    </tr>
-                }
-            </tbody>
-        </table>
+                                            İptal Et
+                                        </button>
+                                    </form>
+                                }
+                                else
+                                {
+                                    @* Zaten iptal edilmiş rezervasyonda buton yerine bilgi yazısı göster *@
+                                    <span class="text-muted">İptal Edildi</span>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
     }
 </div>

@@ -1,96 +1,110 @@
 @{
+    // Sayfa başlığı
     ViewData["Title"] = "Kayıt Ol";
 }
 
-<div class="row justify-content-center">
-    <div class="col-md-4">
-        <h2 class="text-center">Kayıt Ol</h2>
-        <hr />
+<div class="login-container">
+    <div class="login-card" style="max-width: 600px;">
+
+        <!-- Sayfa başlığı -->
+        <div class="login-brand">
+            <h1>Kayıt Ol</h1>
+        </div>
+
+        <!-- Hata mesajı varsa kullanıcıya göster -->
         @if (ViewData["Error"] != null)
         {
-            <div class="alert alert-danger">@ViewData["Error"]</div>
+            <div class="alert alert-danger rounded-3 border-0">
+                @ViewData["Error"]
+            </div>
         }
 
+        <!-- Kayıt formu (Register action'ına POST atar) -->
         <form asp-action="Register" method="post">
-            <!-- TC Kimlik No -->
-            <div class="form-group mb-3">
-                <label for="tcno" class="control-label">TC Kimlik No</label>
-                <input type="text"
-                       id="tcno"
-                       name="tcNo"
-                       class="form-control"
-                       maxlength="11"
-                       pattern="\d{11}"
-                       required />
+
+            <div class="row">
+                <div class="col-md-6">
+                    <!-- TC Kimlik -->
+                    <div class="mb-3">
+                        <label for="tcno" class="form-label">TC Kimlik No</label>
+                        <input type="text" id="tcno" name="tcNo" class="form-control" maxlength="11" pattern="\d{11}"
+                            placeholder="11 haneli TC No" required />
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <!-- Doğum Tarihi -->
+                    <div class="mb-3">
+                        <label for="birthDate" class="form-label">Doğum Tarihi</label>
+                        <input type="date" id="birthDate" name="birthDate" class="form-control" required />
+                    </div>
+                </div>
+
             </div>
 
-            <!-- Ad -->
-            <div class="form-group mb-3">
-                <label for="username" class="control-label">Ad</label>
-                <input type="text"
-                       id="username"
-                       name="firstName"
-                       class="form-control"
-                       required />
+            <div class="row">
+                <div class="col-md-6">
+                    <!-- Ad -->
+                    <div class="mb-3">
+                        <label for="username" class="form-label">Ad</label>
+                        <input type="text" id="username" name="firstName" class="form-control" placeholder="Adınız"
+                            required />
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <!-- Soyad -->
+                    <div class="mb-3">
+                        <label for="lastName" class="form-label">Soyad</label>
+                        <input type="text" id="lastName" name="lastName" class="form-control" placeholder="Soyadınız"
+                            required />
+                    </div>
+                </div>
+
             </div>
 
-            <!-- Soyad -->
-            <div class="form-group mb-3">
-                <label for="lastName" class="control-label">Soyad</label>
-                <input type="text"
-                       id="lastName"
-                       name="lastName"
-                       class="form-control"
-                       required />
+            <div class="row">
+                <div class="col-md-6">
+                    <!-- E-posta -->
+                    <div class="mb-3">
+                        <label for="email" class="form-label">E-Posta</label>
+                        <input type="email" id="email" name="email" class="form-control" placeholder="ornek@email.com"
+                            required />
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <!-- Telefon -->
+                    <div class="mb-3">
+                        <label for="phone" class="form-label">Telefon</label>
+                        <input type="tel" id="phone" name="phone" class="form-control" placeholder="5XX XXX XX XX"
+                            required />
+                    </div>
+                </div>
+
             </div>
 
-            <!-- Doğum Tarihi -->
-            <div class="form-group mb-3">
-                <label for="birthDate" class="control-label">Doğum Tarihi</label>
-                <input type="date"
-                       id="birthDate"
-                       name="birthDate"
-                       class="form-control"
-                       required />
+            <!-- Şifre alanı -->
+            <div class="mb-4">
+                <label for="password" class="form-label">Şifre</label>
+                <input type="password" id="password" name="password" class="form-control" placeholder="********"
+                    required />
             </div>
 
-            <!-- E-posta -->
-            <div class="form-group mb-3">
-                <label for="email" class="control-label">E-Posta</label>
-                <input type="email"
-                       id="email"
-                       name="email"
-                       class="form-control"
-                       required />
+            <!-- Kayıt ol butonu -->
+            <div class="mb-3">
+                <input type="submit" value="Kayıt Ol" class="btn btn-primary btn-lg w-100" />
             </div>
 
-            <!-- Telefon -->
-            <div class="form-group mb-3">
-                <label for="phone" class="control-label">Telefon</label>
-                <input type="tel"
-                       id="phone"
-                       name="phone"
-                       class="form-control"
-                       required />
-            </div>
-
-            <!-- Şifre -->
-            <div class="form-group mb-3">
-                <label for="password" class="control-label">Şifre</label>
-                <input type="password"
-                       id="password"
-                       name="password"
-                       class="form-control"
-                       required />
-            </div>
-
-            <div class="form-group mb-3">
-                <input type="submit" value="Kayıt Ol" class="btn btn-primary w-100" />
-            </div>
         </form>
 
-        <div class="text-center">
-            <p>Zaten hesabınız var mı? <a asp-action="Login">Giriş Yap</a></p>
+        <!-- Login sayfasına yönlendiren link -->
+        <div class="auth-links">
+            <p>
+                Zaten hesabınız var mı?
+                <a asp-action="Login">Giriş Yap</a>
+            </p>
         </div>
+
     </div>
 </div>

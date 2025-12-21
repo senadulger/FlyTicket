@@ -1,37 +1,81 @@
 ﻿@{
+    // Sayfa başlığı
     ViewData["Title"] = "Ana Sayfa";
 }
 
+<!-- Sayfa üst başlık alanı -->
 <div class="text-center mb-5">
-    <h1 class="display-3 fw-bold text-primary">FlyTicket</h1>
-    <p class="lead text-muted">Kolayca rezervasyon yapın.</p>
+    <!-- Marka ismi (gradient yazı stili CSS'ten geliyor) -->
+    <h1 class="display-3 fw-bold brand-gradient">FlyTicket</h1>
+    <!-- Slogan -->
+    <p class="lead text-muted">Kolayca rezervasyon yapın, dünyayı keşfedin.</p>
 </div>
 
+<!-- Arama kartını ortalamak için grid -->
 <div class="row justify-content-center">
     <div class="col-md-8">
+
+        <!-- Arama kartı -->
         <div class="card shadow-lg border-0">
             <div class="card-body p-5">
-                <h3 class="card-title text-center mb-4">Hemen Uçuş Ara</h3>
+
+                <!-- Kart başlığı ve ikon -->
+                <div class="d-flex align-items-center mb-4">
+                    <div class="icon-square me-3">
+                        <!-- Arama ikonu -->
+                        <i class="bi bi-search"></i>
+                    </div>
+                    <h3 class="card-title mb-0">Hemen Uçuş Ara</h3>
+                </div>
+
+                <!-- Uçuş arama formu (GET): BookingController -> Index -->
                 <form method="get" asp-controller="Booking" asp-action="Index" class="row g-3">
+
+                    <!-- Nereden -->
                     <div class="col-md-6">
-                        <label for="from" class="form-label">Nereden</label>
-                        <input type="text" class="form-control form-control-lg" name="from" placeholder="Şehir veya Havaalanı">
+                        <label for="from" class="form-label text-muted fw-bold small">Nereden</label>
+                        <div class="input-group-custom">
+                            <!-- Uçak ikonu -->
+                            <i class="bi bi-airplane-fill text-muted fs-5" style="transform: rotate(45deg);"></i>
+
+                            <!-- Kalkış yeri input -->
+                            <input type="text" class="form-control form-control-lg border-0 bg-light ps-5" name="from"
+                                placeholder="Şehir veya Havaalanı">
+                        </div>
                     </div>
+
+                    <!-- Nereye -->
                     <div class="col-md-6">
-                        <label for="to" class="form-label">Nereye</label>
-                        <input type="text" class="form-control form-control-lg" name="to" placeholder="Şehir veya Havaalanı">
+                        <label for="to" class="form-label text-muted fw-bold small">Nereye</label>
+                        <div class="input-group-custom">
+                            <!-- Uçak ikonu -->
+                            <i class="bi bi-airplane-fill text-muted fs-5" style="transform: rotate(135deg);"></i>
+
+                            <!-- Varış yeri input -->
+                            <input type="text" class="form-control form-control-lg border-0 bg-light ps-5" name="to"
+                                placeholder="Şehir veya Havaalanı">
+                        </div>
                     </div>
+
+                    <!-- Gidiş Tarihi -->
                     <div class="col-md-6">
                         <label for="startDate" class="form-label">Gidiş Tarihi</label>
                         <input type="date" class="form-control form-control-lg" name="startDate">
                     </div>
+
+                    <!-- Dönüş Tarihi -->
                     <div class="col-md-6">
                         <label for="endDate" class="form-label">Dönüş Tarihi</label>
                         <input type="date" class="form-control form-control-lg" name="endDate">
                     </div>
+
+                    <!-- Form submit butonu -->
                     <div class="col-12 mt-4">
-                        <button type="submit" class="btn btn-primary btn-lg w-100">Uçuşları Listele</button>
+                        <button type="submit" class="btn btn-primary btn-lg w-100">
+                            Uçuşları Listele
+                        </button>
                     </div>
+
                 </form>
             </div>
         </div>

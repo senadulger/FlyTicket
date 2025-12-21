@@ -1,71 +1,93 @@
 @model List<Dictionary<string, object>>
 
 @{
+    // Sayfa başlığı 
     ViewData["Title"] = "Uçaklar";
 }
 
 <div class="container mt-4">
     <h2>Uçaklar</h2>
 
+    <!-- Başarılı işlem mesajı -->
     @if (TempData["Success"] != null)
     {
         <div class="alert alert-success mt-3">@TempData["Success"]</div>
     }
+
+    <!-- Hata mesajı -->
     @if (TempData["Error"] != null)
     {
         <div class="alert alert-danger mt-3">@TempData["Error"]</div>
     }
 
+    <!-- Yeni uçak ekleme butonu -->
     <div class="mb-3">
-        <a class="btn btn-primary" asp-controller="Admin" asp-action="AddPlane">Uçak Ekle</a>
+        <a class="btn btn-primary" asp-controller="Admin" asp-action="AddPlane">
+            Uçak Ekle
+        </a>
     </div>
 
+    <!-- Model boşsa bilgilendirme -->
     @if (Model == null || Model.Count == 0)
     {
         <div class="alert alert-info">Kayıtlı uçak bulunmamaktadır.</div>
     }
     else
     {
-        <table class="table table-bordered table-hover mt-3">
-            <thead class="table-dark">
-                <tr>
-                    <th>ID</th>
-                    <th>Uçak Adı</th>
-                    <th>Koltuk Sayısı</th>
-                    <th>İşlemler</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var row in Model)
-                {
-                    <tr>
-                        <td>@row["id"]</td>
-                        <td>@row["name"]</td>
-                        <td>@row["seat_count"]</td>
-                        <td>
-                            <a class="btn btn-sm btn-info"
-                               asp-controller="Admin"
-                               asp-action="Seats"
-                               asp-route-planeId="@(row["id"])">
-                                Koltukları Gör
-                            </a>
+        <div class="table-responsive">
 
-                            <form asp-controller="Admin"
-                                  asp-action="DeletePlane"
-                                  method="post"
-                                  style="display:inline; margin-left:6px;">
-                                @Html.AntiForgeryToken()
-                                <input type="hidden" name="id" value="@(row["id"])" />
-                                <button type="submit"
-                                        class="btn btn-sm btn-danger"
-                                        onclick="return confirm('Bu uçağı silmek istiyor musunuz?');">
-                                    Sil
-                                </button>
-                            </form>
-                        </td>
+            <!-- Uçak listesi tablosu -->
+            <table class="table table-custom mb-0">
+
+                <!-- Tablo başlıkları -->
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Uçak Adı</th>
+                        <th>Koltuk Sayısı</th>
+                        <th>İşlemler</th>
                     </tr>
-                }
-            </tbody>
-        </table>
+                </thead>
+
+                <!-- Tablo içerik alanı -->
+                <tbody>
+                    @foreach (var row in Model)
+                    {
+                        <tr>
+                            <!-- Uçağın temel bilgileri -->
+                            <td>@row["id"]</td>
+                            <td class="fw-medium">@row["name"]</td>
+                            <td>@row["seat_count"]</td>
+
+                            <!-- İşlemler: Koltukları Gör ve Sil -->
+                            <td>
+
+                                <a class="btn-action-view text-decoration-none me-1" asp-controller="Admin" asp-action="Seats"
+                                    asp-route-planeId="@(row["id"])">
+                                    Koltukları Gör
+                                </a>
+
+                                @* Uçağı silme formu (POST) *@
+                                <form asp-controller="Admin" asp-action="DeletePlane" method="post" style="display:inline;">
+
+                                    @Html.AntiForgeryToken()
+
+                                    <!-- Silinecek uçağın ID'si -->
+                                    <input type="hidden" name="id" value="@(row["id"])" />
+
+                                    <!-- Sil butonu -->
+                                    <button type="submit" class="btn-action-delete"
+                                        onclick="return confirm('Bu uçağı silmek istiyor musunuz?');">
+                                        Sil
+                                    </button>
+                                </form>
+
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+
+            </table>
+        </div>
     }
 </div>

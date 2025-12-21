@@ -1,72 +1,82 @@
 @{
+    // Sayfa başlığı
     ViewData["Title"] = "Admin Paneli";
 }
 
 <div class="container mt-4">
+
+    <!-- Sayfa başlığı -->
     <h1 class="mb-4">Admin Paneli</h1>
 
+    <!-- Responsive kart grid yapısı -->
     <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-3">
 
+        <!-- KULLANICILAR kartı -->
         <div class="col">
             <a asp-controller="Admin" asp-action="Users" class="text-decoration-none">
                 <div class="card h-100">
                     <div class="card-body">
-                        <h5 class="card-title">Kullanıcılar</h5>
+                        <h5 class="card-title text-brand-red">Kullanıcılar</h5>
                         <p class="card-text">Sistemde kayıtlı kullanıcıları görüntüle.</p>
                     </div>
                 </div>
             </a>
         </div>
 
+        <!-- UÇAKLAR kartı -->
         <div class="col">
             <a asp-controller="Admin" asp-action="Planes" class="text-decoration-none">
                 <div class="card h-100">
                     <div class="card-body">
-                        <h5 class="card-title">Uçaklar</h5>
+                        <h5 class="card-title text-brand-red">Uçaklar</h5>
                         <p class="card-text">Uçak ekle, listele ve yönet.</p>
                     </div>
                 </div>
             </a>
         </div>
 
+        <!-- HAVAALANLARI kartı -->
         <div class="col">
             <a asp-controller="Admin" asp-action="Airports" class="text-decoration-none">
                 <div class="card h-100">
                     <div class="card-body">
-                        <h5 class="card-title">Havaalanları</h5>
+                        <h5 class="card-title text-brand-red">Havaalanları</h5>
                         <p class="card-text">Havaalanı kayıtlarını düzenle.</p>
                     </div>
                 </div>
             </a>
         </div>
 
+        <!-- UÇUŞLAR kartı -->
         <div class="col">
             <a asp-controller="Admin" asp-action="Flights" class="text-decoration-none">
                 <div class="card h-100">
                     <div class="card-body">
-                        <h5 class="card-title">Uçuşlar</h5>
+                        <h5 class="card-title text-brand-red">Uçuşlar</h5>
                         <p class="card-text">Uçuş ekle, listele ve zamanlamayı yönet.</p>
                     </div>
                 </div>
             </a>
         </div>
 
+        <!-- KOLTUKLAR kartı -->
         <div class="col">
             <a asp-controller="Admin" asp-action="Seats" class="text-decoration-none">
                 <div class="card h-100">
                     <div class="card-body">
-                        <h5 class="card-title">Koltuklar</h5>
+                        <h5 class="card-title text-brand-red">Koltuklar</h5>
                         <p class="card-text">Uçaklara ait koltuk düzenini yönet.</p>
                     </div>
                 </div>
             </a>
         </div>
 
+        <!-- REZERVASYONLAR kartı -->
         <div class="col">
             <a asp-controller="Admin" asp-action="Reservations" class="text-decoration-none">
                 <div class="card h-100">
                     <div class="card-body">
-                        <h5 class="card-title">Rezervasyonlar</h5>
+                        <h5 class="card-title text-brand-red">Rezervasyonlar</h5>
                         <p class="card-text">Rezervasyon kayıtlarını görüntüle ve iptal et.</p>
                     </div>
                 </div>

@@ -1,68 +1,94 @@
 @model List<Dictionary<string, object>>
 
 @{
+    // Sayfa başlığı
     ViewData["Title"] = "Havaalanları";
 }
 
 <div class="container mt-4">
     <h2>Havaalanları</h2>
 
+    <!-- Başarılı işlem mesajı -->
     @if (TempData["Success"] != null)
     {
-        <div class="alert alert-success mt-3">@TempData["Success"]</div>
+        <div class="alert alert-success mt-3">
+            @TempData["Success"]
+        </div>
     }
+
+    <!-- Hata mesajı -->
     @if (TempData["Error"] != null)
     {
-        <div class="alert alert-danger mt-3">@TempData["Error"]</div>
+        <div class="alert alert-danger mt-3">
+            @TempData["Error"]
+        </div>
     }
 
+    <!-- Yeni havaalanı ekleme butonu -->
     <div class="mb-3">
-        <a class="btn btn-primary" asp-controller="Admin" asp-action="AddAirport">Havaalanı Ekle</a>
+        <a class="btn btn-primary" asp-controller="Admin" asp-action="AddAirport">
+            Havaalanı Ekle
+        </a>
     </div>
 
+    <!-- Model boşsa bilgilendirme mesajı -->
     @if (Model == null || Model.Count == 0)
     {
-        <div class="alert alert-info">Kayıtlı havaalanı bulunmamaktadır.</div>
+        <div class="alert alert-info">
+            Kayıtlı havaalanı bulunmamaktadır.
+        </div>
     }
     else
     {
-        <table class="table table-bordered table-hover mt-3">
-            <thead class="table-dark">
-                <tr>
-                    <th>ID</th>
-                    <th>Kod</th>
-                    <th>Şehir</th>
-                    <th>İsim</th>
-                    <th>Ülke</th>
-                    <th>İşlemler</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var row in Model)
-                {
+        <div class="table-responsive">
+
+            <!-- Havaalanları listesi -->
+            <table class="table table-custom mb-0">
+
+                <!-- Tablo başlıkları -->
+                <thead>
                     <tr>
-                        <td>@row["id"]</td>
-                        <td>@row["code"]</td>
-                        <td>@row["city"]</td>
-                        <td>@row["name"]</td>
-                        <td>@row["country"]</td>
-                        <td>
-                            <form asp-controller="Admin"
-                                  asp-action="DeleteAirport"
-                                  method="post"
-                                  style="display:inline">
-                                @Html.AntiForgeryToken()
-                                <input type="hidden" name="id" value="@(row["id"])" />
-                                <button type="submit"
-                                        class="btn btn-sm btn-danger"
-                                        onclick="return confirm('Bu havaalanını silmek istiyor musunuz?');">
-                                    Sil
-                                </button>
-                            </form>
-                        </td>
+                        <th>ID</th>
+                        <th>Kod</th>
+                        <th>Şehir</th>
+                        <th>İsim</th>
+                        <th>Ülke</th>
+                        <th>İşlemler</th>
                     </tr>
-                }
-            </tbody>
-        </table>
+                </thead>
+
+                <!-- Tablo içeriği -->
+                <tbody>
+                    @foreach (var row in Model)
+                    {
+                        <tr>
+                            <td>@row["id"]</td>
+                            <td class="fw-bold">@row["code"]</td>
+                            <td>@row["city"]</td>
+                            <td>@row["name"]</td>
+                            <td>@row["country"]</td>
+
+                            <!-- Silme işlemi -->
+                            <td>
+                                <form asp-controller="Admin" asp-action="DeleteAirport" method="post" style="display:inline">
+
+                                    @Html.AntiForgeryToken()
+
+                                    <!-- Silinecek havaalanının ID'si -->
+                                    <input type="hidden" name="id" value="@(row["id"])" />
+
+                                    <!-- Sil butonu -->
+                                    <button type="submit" class="btn-action-delete"
+                                        onclick="return confirm('Bu havaalanını silmek istiyor musunuz?');">
+                                        Sil
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+
+            </table>
+        </div>
     }
 </div>

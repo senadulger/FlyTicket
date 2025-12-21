@@ -1,43 +1,53 @@
 @model prgmlab3.Models.FlightModel
 
 @{
+    // Sayfa başlığı
     ViewData["Title"] = "Uçuş Ekle";
 }
 
 <div class="container mt-4">
     <h2>Uçuş Ekle</h2>
 
+    <!-- Hata mesajı varsa göster -->
     @if (TempData["Error"] != null)
     {
         <div class="alert alert-danger">@TempData["Error"]</div>
     }
+
+    <!-- Başarı mesajı varsa göster -->
     @if (TempData["Success"] != null)
     {
         <div class="alert alert-success">@TempData["Success"]</div>
     }
 
+    <!-- Uçuş ekleme formu: AdminController -> AddFlight (POST) -->
     <form asp-controller="Admin" asp-action="AddFlight" method="post">
+
         @Html.AntiForgeryToken()
 
-        @* Genel doğrulama hataları *@
+        <!-- Genel doğrulama hataları -->
         <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
+        <!-- Uçak seçimi -->
         <div class="mb-3">
             <label asp-for="PlaneId" class="form-label">Uçak</label>
             <select asp-for="PlaneId" class="form-select" required>
                 <option value="">Uçak Seçin</option>
+
                 @foreach (var p in (List<Dictionary<string, object>>)ViewBag.Planes)
                 {
                     <option value="@(p["id"])">@p["name"]</option>
                 }
             </select>
-            <span asp-validation-for="PlaneId" class="text-danger"></span>
+            <span asp-validation-for="PlaneId" class="text-danger"></span> @* PlaneId validasyon hatası *@
         </div>
 
+        <!-- Kalkış havaalanı seçimi -->
         <div class="mb-3">
             <label asp-for="DepartureLocation" class="form-label">Kalkış Havaalanı</label>
             <select asp-for="DepartureLocation" class="form-select" required>
                 <option value="">Havaalanı Seçin</option>
+
                 @foreach (var a in (List<Dictionary<string, object>>)ViewBag.Airports)
                 {
                     <option value="@(a["id"])">@a["city"] - @a["name"]</option>
@@ -46,10 +56,12 @@
             <span asp-validation-for="DepartureLocation" class="text-danger"></span>
         </div>
 
+        <!-- Varış havaalanı seçimi -->
         <div class="mb-3">
             <label asp-for="ArrivalLocation" class="form-label">Varış Havaalanı</label>
             <select asp-for="ArrivalLocation" class="form-select" required>
                 <option value="">Havaalanı Seçin</option>
+
                 @foreach (var a in (List<Dictionary<string, object>>)ViewBag.Airports)
                 {
                     <option value="@(a["id"])">@a["city"] - @a["name"]</option>
@@ -58,25 +70,31 @@
             <span asp-validation-for="ArrivalLocation" class="text-danger"></span>
         </div>
 
+        <!-- Kalkış zamanı -->
         <div class="mb-3">
             <label asp-for="DepartureTime" class="form-label">Kalkış Zamanı</label>
             <input asp-for="DepartureTime" type="datetime-local" class="form-control" required />
             <span asp-validation-for="DepartureTime" class="text-danger"></span>
         </div>
 
+        <!-- Varış zamanı -->
         <div class="mb-3">
             <label asp-for="ArrivalTime" class="form-label">Varış Zamanı</label>
             <input asp-for="ArrivalTime" type="datetime-local" class="form-control" required />
             <span asp-validation-for="ArrivalTime" class="text-danger"></span>
         </div>
 
+        <!-- Baz fiyat -->
         <div class="mb-3">
             <label asp-for="Price" class="form-label">Baz Fiyat</label>
             <input asp-for="Price" type="number" step="0.01" class="form-control" required />
             <span asp-validation-for="Price" class="text-danger"></span>
         </div>
 
+        <!-- Kaydet: Formu gönderir -->
         <button type="submit" class="btn btn-primary">Kaydet</button>
+
+        <!-- İptal: Uçuş listesine geri döner -->
         <a class="btn btn-secondary ms-2" asp-controller="Admin" asp-action="Flights">İptal</a>
     </form>
 </div>
