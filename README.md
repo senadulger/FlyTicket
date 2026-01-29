@@ -1,4 +1,4 @@
-# FlyTicket – Uçuş Bileti Rezervasyon Sistemi
+# FlyTicket – Uçuş Bileti Rezervasyon Sistemi 
 
 ## 1. Proje Hakkında
 Bu proje, **"Nesneye Yönelimli Programlama"** konusu kapsamında geliştirilmiş bir Uçuş Rezervasyon Sistemidir. Temel amaç; .NET ekosistemini kullanarak Model-View-Controller (MVC) mimarisine uygun, ilişkisel veritabanı yönetimi içeren ve kullanıcı dostu arayüze sahip kapsamlı bir web uygulaması geliştirmektir.
